@@ -134,7 +134,7 @@ void parseDotFile(FILE* dot_file, struct _Person_* list_of_persons){
     printError(OUT_OF_MEMORY, MEMORY_EXCEPTION);
   }
 
-  char inputChar = '\0';
+  int inputChar = '\0';
 
   while((inputChar = fgetc(dot_file)) != EOF)
   {
@@ -143,9 +143,7 @@ void parseDotFile(FILE* dot_file, struct _Person_* list_of_persons){
     if(buffer_position >= buffer_size)
     {
       buffer_size += 10;
-        printf("before realloc\n");
       buffer = realloc(buffer, buffer_size);
-        printf("after realloc\n");
       if(buffer == NULL)
       {
         printError(OUT_OF_MEMORY, MEMORY_EXCEPTION);
