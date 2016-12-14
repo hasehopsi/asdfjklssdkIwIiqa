@@ -130,7 +130,8 @@ struct _Person_* addPersonToList(struct _Person_* person, struct _PersonList_* p
     person_list->list_[index].gender_ == person->gender_)
     {
       person_already_exists = true;
-      existing_person = &(person_list-> list_[index]);
+      existing_person = &(person_list->list_[index]);
+      break;
     }
   }
   if(!person_already_exists)
@@ -317,6 +318,7 @@ void parseDotFile(FILE* dot_file, struct _PersonList_* all_persons){
       {
         addRelation(person2, "mother", person1, *all_persons);
       } 
+      free(peopleList);
     }
     else
     {
@@ -330,6 +332,7 @@ void parseDotFile(FILE* dot_file, struct _PersonList_* all_persons){
       struct _Person_* person1 = malloc(sizeof(struct _Person_));
       parsePerson(peopleList[0], person1);
       person1 = addPersonToList(person1, all_persons);
+      free(peopleList);
     }
   }
   free(lines);
