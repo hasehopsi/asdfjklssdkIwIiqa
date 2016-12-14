@@ -95,7 +95,7 @@ int addRelation(struct _Person_* person1, char* relation, struct _Person_* perso
   {
     if(person1->gender_ == FEMALE)
     {
-      person2->mother_ = person1;
+      //person2->mother_ = person1;
     }
     else
     {
@@ -106,7 +106,7 @@ int addRelation(struct _Person_* person1, char* relation, struct _Person_* perso
   {
     if(person1->gender_ == MALE)
     {
-      person2->father_ = person1;
+      //person2->father_ = person1;
     }
     else
     {
