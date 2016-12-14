@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
     {
       printf("cannot understand command %s\n", command);
     } 
+    free(command_buffer); 
   } 
-  free(command_buffer); 
   return 0;
 }
