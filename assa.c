@@ -7,7 +7,7 @@
 #define CLOSE_MESSAGE "bye\n"
 #define OUT_OF_MEMORY "[ERR] Out of memory.\n"
 #define COULD_NOT_READ_FILE "[ERR] Could not read file.\n"
-#define USAGE_EXCEPTION "Usage: ./ass [file-name]\n"
+#define USAGE_EXCEPTION "Usage: ./ass [file-name_]\n"
 
 //----------------------------------------------------------------------------
 //
@@ -29,18 +29,24 @@ enum _Gender_{
 struct _Person_{
     struct _Person_* father_;
     struct _Person_* mother_;
-    enum _Gender_ gender;
-    char* name;
+    enum _Gender_ gender_;
+    char* name_;
+};
+
+struct _PersonList_{
+  struct _Person_* list_;
+  int length_;
 };
 
 struct _TokenArray_{
-    char** data;
-    int length;
+    char** data_;
+    int length_;
 };
 
 void debug(char* message){
   printf("%s\n", message);
 }
+
 void printError(char* error, enum _ErrorType_ type){
   printf("%s", error);
   switch(type)
@@ -78,30 +84,85 @@ int tokenizeString(char* input_string, char* delimiter, struct _TokenArray_* out
     }
     token = strtok(NULL, delimiter);
   }
-  output_array->data = out_array;
-  output_array->length = out_array_position - 1;
+  output_array->data_ = out_array;
+  output_array->length_ = out_array_position - 1;
   return 0;
 }
 
+int addRelation(struct _Person_* person1, char* relation, struct _Person_* person2, struct _PersonList_ all_persons)
+{
+  if(strcmp(relation, "mother") == 0)
+  {
+    if(person1->gender_ == FEMALE)
+    {
+      person2->mother_ = person1;
+    }
+    else
+    {
+      return 2;
+    }
+  }
+  else if(strcmp(relation, "father") == 0)
+  {
+    if(person1->gender_ == MALE)
+    {
+      person2->father_ = person1;
+    }
+    else
+    {
+      return 2;
+    }
+  }
+  else
+  {
+    return 1;
+  }
+  return 0;
+}
 
-int parsePeopleStrings(char** input_string, char*** peopleList, int num_people)
+struct _Person_* addPersonToList(struct _Person_* person, struct _PersonList_* person_list){
+  int index = 0;
+  bool person_already_exists = false;
+  struct _Person_* existing_person;
+  for(index = 0; index < person_list->length_ ; index++)
+  {
+    if(strcmp(person_list->list_[index].name_, person->name_) == 0 &&
+    person_list->list_[index].gender_ == person->gender_)
+    {
+      person_already_exists = true;
+      existing_person = &(person_list-> list_[index]);
+    }
+  }
+  if(!person_already_exists)
+  {
+    //copy person
+    person_list->length_++;
+    person_list->list_ = realloc(person_list->list_, person_list->length_ * sizeof(struct _Person_));
+    person_list->list_[person_list->length_ - 1] = *person;
+    printf("added person %s\n", person->name_);
+    existing_person = &(person_list->list_[person_list->length_ - 1]);
+  }
+  free(person);
+  return existing_person; 
+}
+
+int parsePeopleStrings(char* input_string, char*** peopleList, int num_people)
 {
   int index = 0;
   int entries_made = 0;
   bool in_parenthesis = false;  
-  char* string = *input_string;
-  int length = strlen(string);
+  int length_= strlen(input_string);
 
-  for(index = 0; index < length; index++){
-    if(string[index] == '\"')
+  for(index = 0; index < length_; index++){
+    if(input_string[index] == '\"')
     {
       in_parenthesis = !in_parenthesis;
       if(in_parenthesis && entries_made < num_people)
       {
-        (*peopleList)[entries_made++] = &(string[index + 1]);
+        (*peopleList)[entries_made++] = &(input_string[index + 1]);
       }
       if(!in_parenthesis){
-        string[index] = '\0';
+        input_string[index] = '\0';
       }
     }
   }
@@ -116,27 +177,24 @@ int parsePeopleStrings(char** input_string, char*** peopleList, int num_people)
 char* parsePerson(char* person_string, struct _Person_* person)
 {
   bool person_found = false;
-  int length = strlen(person_string);
+  int length_= strlen(person_string);
   char* index = person_string;
   while(!person_found){
     index = strchr(index, '[');
     if(index == NULL){
-      printf("nothing found\n");
       return NULL;
     }
-    printf("%p, %p\n", index, person_string + length);
-    printf("%s %c %c\n", index, index[1], index[2]);
-    if(index + 2 <= person_string + length &&
+    if(index + 2 <= person_string + length_&&
       (index[1] == 'm' || index[1] == 'f') &&
       index[2] == ']')
     {
-      printf("person found!");
       person_found = true;
     }
-    printf("person not found :-(");
   }
-  strncpy(person->name, person_string, index - person_string);
-  person->gender = index[1] == 'm' ? MALE : FEMALE;
+  person->name_ = malloc((index - person_string + 1) * sizeof(char));
+  person->name_[index - person_string] = '\0';
+  strncpy(person->name_, person_string, index - person_string);
+  person->gender_ = index[1] == 'm' ? MALE : FEMALE;
   return index + 3;
 }
 
@@ -150,7 +208,7 @@ char* parsePerson(char* person_string, struct _Person_* person)
 //
 //
 
-void parseDotFile(FILE* dot_file, struct _Person_* list_of_persons){
+void parseDotFile(FILE* dot_file, struct _PersonList_* all_persons){
   int lines_size = 10;
   int lines_position = 0;
   char** lines = (char**) malloc(sizeof(char**) * lines_size);
@@ -171,7 +229,6 @@ void parseDotFile(FILE* dot_file, struct _Person_* list_of_persons){
 
   while((inputChar = fgetc(dot_file)) != EOF)
   {
-    printf("%c\n", inputChar);
     buffer[buffer_position++] = (char) inputChar;
     if(buffer_position >= buffer_size)
     {
@@ -233,36 +290,46 @@ void parseDotFile(FILE* dot_file, struct _Person_* list_of_persons){
   int line = 0;
   for(line=2; line < lines_position; line++)
   {
+    
     //1. line contains one person 
     //2. search for people
+    
     if(strstr(lines[line], "->") != NULL)
     {
       char** peopleList = malloc(2 * sizeof(char**));     
-      int status = parsePeopleStrings(&lines[line], &peopleList, 2);
+      int status = parsePeopleStrings(lines[line], &peopleList, 2);
       if(status == 1)
       {
         printError(COULD_NOT_READ_FILE, FILE_UNREADABLE_EXCEPTION);
       }
-
-      printf("%s\n", peopleList[0]);
-      printf("%s\n", peopleList[1]);
 
       struct _Person_* person1 = malloc(sizeof(struct _Person_));
       struct _Person_* person2 = malloc(sizeof(struct _Person_));
       parsePerson(peopleList[0], person1);
       parsePerson(peopleList[1], person2);
-      printf("parsed person name %s\n", person1->name);
+      person1 = addPersonToList(person1, all_persons);
+      person2 = addPersonToList(person2, all_persons);
+      if(person1->gender_ == MALE)
+      {
+        addRelation(person2, "father", person1, *all_persons);
+      }
+      else
+      {
+        addRelation(person2, "mother", person1, *all_persons);
+      } 
     }
     else
     {
+      
       char** peopleList = malloc(sizeof(char**));
-      int status = parsePeopleStrings(&lines[line], &peopleList, 1);
+      int status = parsePeopleStrings(lines[line], &peopleList, 1);
       if(status == 1)
       {
         printError(COULD_NOT_READ_FILE, FILE_UNREADABLE_EXCEPTION);
       }
-
-      printf("%s\n", peopleList[0]);
+      struct _Person_* person1 = malloc(sizeof(struct _Person_));
+      parsePerson(peopleList[0], person1);
+      person1 = addPersonToList(person1, all_persons);
     }
   }
   free(lines);
@@ -275,7 +342,7 @@ void parseDotFile(FILE* dot_file, struct _Person_* list_of_persons){
 //
 // @param command_buffer buffer to write input to
 //
-  // @return void 
+// @return void 
 //
 //
 void commandPrompt(char** command_buffer)
@@ -284,19 +351,18 @@ void commandPrompt(char** command_buffer)
   char input_character = '\0';
   char* input_buffer = (char*) malloc(sizeof(char) * 10);
   unsigned int input_buffer_position = 0;
-  unsigned int input_buffer_length = 10;
+  unsigned int input_buffer_length_= 10;
   
   input_character = getchar();
   while(input_character != '\n')
   {
-    
     //printf("%c", input_character);
     input_buffer[input_buffer_position] = input_character;
     input_buffer_position++;
-    if(input_buffer_position >= input_buffer_length)
+    if(input_buffer_position >= input_buffer_length_)
     {
-      input_buffer_length += 10;
-      input_buffer = (char*) realloc(input_buffer, input_buffer_length * sizeof(char));
+      input_buffer_length_+= 10;
+      input_buffer = (char*) realloc(input_buffer, input_buffer_length_* sizeof(char));
     }
     input_character = getchar();
   }
@@ -323,8 +389,9 @@ int main(int argc, char *argv[])
   char* command_buffer = NULL;
   char* command;
   char* arguments;
-  struct _TokenArray_ commandTokens;
-  struct _Person_* list_of_all_persons = NULL;
+  struct _PersonList_* all_persons = malloc(sizeof(struct _PersonList_));
+  all_persons->length_= 0;
+  all_persons->list_= malloc(sizeof(struct _Person_));
   if(argc > 1)
   {
     char* dot_inputfile_name = argv[1]; 
@@ -333,7 +400,7 @@ int main(int argc, char *argv[])
     {
       printError(COULD_NOT_READ_FILE, FILE_UNREADABLE_EXCEPTION); 
     }
-    parseDotFile(dot_inputfile, list_of_all_persons);
+    parseDotFile(dot_inputfile, all_persons);
   }
 
   while(true)
