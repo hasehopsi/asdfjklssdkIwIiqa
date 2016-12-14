@@ -311,14 +311,14 @@ void parseDotFile(FILE* dot_file, struct _PersonList_* all_persons){
       parsePerson(peopleList[1], person2);
       person1 = addPersonToList(person1, all_persons);
       person2 = addPersonToList(person2, all_persons);
-      if(person1->gender_ == MALE)
+      /*if(person1->gender_ == MALE)
       {
         addRelation(person2, "father", person1, *all_persons);
       }
       else
       {
         addRelation(person2, "mother", person1, *all_persons);
-      } 
+      }*/ 
       free(peopleList);
     }
     else
