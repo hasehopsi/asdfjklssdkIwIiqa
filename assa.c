@@ -147,7 +147,7 @@ struct _Person_* addPersonToList(struct _Person_* person, struct _PersonList_* p
   return existing_person; 
 }
 
-int parsePeopleStrings(char* input_string, char*** peopleList, int num_people)
+int parsePeopleStrings(char* input_string, char** peopleList, int num_people)
 {
   int index = 0;
   int entries_made = 0;
@@ -160,7 +160,7 @@ int parsePeopleStrings(char* input_string, char*** peopleList, int num_people)
       in_parenthesis = !in_parenthesis;
       if(in_parenthesis && entries_made < num_people)
       {
-        (*peopleList)[entries_made++] = &(input_string[index + 1]);
+        peopleList[entries_made++] = &(input_string[index + 1]);
       }
       if(!in_parenthesis){
         input_string[index] = '\0';
@@ -292,13 +292,10 @@ void parseDotFile(FILE* dot_file, struct _PersonList_* all_persons){
   for(line=2; line < lines_position; line++)
   {
     
-    //1. line contains one person 
-    //2. search for people
-    
     if(strstr(lines[line], "->") != NULL)
     {
       char** peopleList = malloc(2 * sizeof(char**));     
-      int status = parsePeopleStrings(lines[line], &peopleList, 2);
+      int status = parsePeopleStrings(lines[line], peopleList, 2);
       if(status == 1)
       {
         printError(COULD_NOT_READ_FILE, FILE_UNREADABLE_EXCEPTION);
@@ -324,7 +321,7 @@ void parseDotFile(FILE* dot_file, struct _PersonList_* all_persons){
     {
       
       char** peopleList = malloc(sizeof(char**));
-      int status = parsePeopleStrings(lines[line], &peopleList, 1);
+      int status = parsePeopleStrings(lines[line], peopleList, 1);
       if(status == 1)
       {
         printError(COULD_NOT_READ_FILE, FILE_UNREADABLE_EXCEPTION);
