@@ -192,9 +192,10 @@ char* parsePerson(char* person_string, struct _Person_* person)
       person_found = true;
     }
   }
-  person->name_ = malloc((index - person_string + 1) * sizeof(char));
-  person->name_[index - person_string] = '\0';
-  strncpy(person->name_, person_string, index - person_string);
+  //person->name_ = malloc((index - person_string + 1) * sizeof(char));
+  person->name_ = "hey";
+  //person->name_[index - person_string] = '\0';
+  //strncpy(person->name_, person_string, index - person_string);
   person->gender_ = index[1] == 'm' ? MALE : FEMALE;
   return index + 3;
 }
