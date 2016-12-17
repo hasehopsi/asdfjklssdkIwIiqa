@@ -34,7 +34,7 @@ struct _Person_{
 };
 
 struct _PersonList_{
-  struct _Person_* list_;
+  struct _Person_** list_;
   int length_;
 };
 
@@ -89,35 +89,8 @@ int tokenizeString(char* input_string, char* delimiter, struct _TokenArray_* out
   return 0;
 }
 
-int addRelation(struct _Person_* person1, char* relation, struct _Person_* person2, struct _PersonList_ all_persons)
+int addPersonsWithRelationCommand(struct _Person_* person1, char* relation, struct _Person_* person2, struct _PersonList_ all_persons)
 {
-  if(strcmp(relation, "mother") == 0)
-  {
-    if(person1->gender_ == FEMALE)
-    {
-      //person2->mother_ = person1;
-    }
-    else
-    {
-      return 2;
-    }
-  }
-  else if(strcmp(relation, "father") == 0)
-  {
-    if(person1->gender_ == MALE)
-    {
-      //person2->father_ = person1;
-    }
-    else
-    {
-      return 2;
-    }
-  }
-  else
-  {
-    return 1;
-  }
-  return 0;
 }
 
 struct _Person_* addPersonToList(struct _Person_* person, struct _PersonList_* person_list){
@@ -126,11 +99,11 @@ struct _Person_* addPersonToList(struct _Person_* person, struct _PersonList_* p
   struct _Person_* existing_person;
   for(index = 0; index < person_list->length_ ; index++)
   {
-    if(strcmp(person_list->list_[index].name_, person->name_) == 0 &&
-    person_list->list_[index].gender_ == person->gender_)
+    if(strcmp(person_list->list_[index]->name_, person->name_) == 0 &&
+    person_list->list_[index]->gender_ == person->gender_)
     {
       person_already_exists = true;
-      existing_person = &(person_list->list_[index]);
+      existing_person = person_list->list_[index];
       break;
     }
   }
@@ -138,16 +111,16 @@ struct _Person_* addPersonToList(struct _Person_* person, struct _PersonList_* p
   {
     //copy person
     person_list->length_++;
-    person_list->list_ = realloc(person_list->list_, person_list->length_ * sizeof(struct _Person_));
-    person_list->list_[person_list->length_ - 1] = *person;
-    printf("added person %s\n", person->name_);
-    existing_person = &(person_list->list_[person_list->length_ - 1]);
+    person_list->list_ = realloc(person_list->list_, person_list->length_ * sizeof(struct _Person_*));
+    person_list->list_[person_list->length_ - 1] = person;
+    printf("added person %s \n", person->name_);
+    existing_person = person_list->list_[person_list->length_ - 1];
   }
   else
   {
     free(person->name_);
+    free(person);
   }
-  free(person);
   return existing_person; 
 }
 
@@ -199,7 +172,7 @@ char* parsePerson(char* person_string, struct _Person_* person)
   person->name_ = malloc((index - person_string + 1) * sizeof(char));
   person->name_[index - person_string] = '\0';
   strncpy(person->name_, person_string, index - person_string);
-  person->gender_ = index[1] == 'm' ? MALE : FEMALE;
+  person->gender_ = (index[1] == 'm' ? MALE : FEMALE);
   return index + 3;
 }
 
@@ -311,14 +284,6 @@ void parseDotFile(FILE* dot_file, struct _PersonList_* all_persons){
       parsePerson(peopleList[1], person2);
       person1 = addPersonToList(person1, all_persons);
       person2 = addPersonToList(person2, all_persons);
-      /*if(person1->gender_ == MALE)
-      {
-        addRelation(person2, "father", person1, *all_persons);
-      }
-      else
-      {
-        addRelation(person2, "mother", person1, *all_persons);
-      }*/ 
       free(peopleList);
     }
     else
@@ -395,7 +360,7 @@ int main(int argc, char *argv[])
   char* arguments;
   struct _PersonList_* all_persons = malloc(sizeof(struct _PersonList_));
   all_persons->length_= 0;
-  all_persons->list_= malloc(sizeof(struct _Person_));
+  all_persons->list_= malloc(sizeof(struct _Person_*));
   if(argc > 1)
   {
     char* dot_inputfile_name = argv[1]; 
