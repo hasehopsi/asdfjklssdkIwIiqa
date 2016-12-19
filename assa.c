@@ -116,7 +116,7 @@ int tokenizeString(char* input_string, char* delimiter, struct _TokenArray_* out
 int stripWhitespace(char* string)
 {
   int index = 0;
-  printf("string was: [%s]", string);
+  printf("string was: [%s]\n", string);
   while(isspace(string[0]))
   {
     for(index = 0; index < strlen(string); index++)
@@ -130,7 +130,8 @@ int stripWhitespace(char* string)
     string[index] = '\0';
     index--;
   }
-  printf("string is now: [%s]", string);
+  printf("string is now: [%s]\n", string);
+  return NORMAL;
 }
 
 //add command
@@ -299,64 +300,77 @@ int skipWhitespace(char** string)
 
 int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_persons, int* question_mark_person_counter)
 {
-  //store position of \0 byte at the end of the string
-  char* position_of_last_char = console_input + strlen(console_input);
   struct _Person_* person1 = malloc(sizeof(struct _Person_));
+  person1->name_ = NULL;
   struct _Person_* person2 = malloc(sizeof(struct _Person_));
+  person2->name_ = NULL;
+  int status = NORMAL; 
   char* position = console_input;
-  int status = parsePerson(&position, person1);
+  char* relation_input;
+
+  if(console_input == NULL)
+  {
+    status = ERROR;  
+  }
+
+  //parse first person
+  if(status == NORMAL)
+  {
+    status = parsePerson(&position, person1);
+  }
+
+  //skip whitespace in string
+  if(status == NORMAL)
+  {
+    status = skipWhitespace(&position);
+  }
+
+  //parse relatoin
+  if(status == NORMAL)
+  {
+    relation_input = strtok(position, " ");
+    if(relation_input == NULL)
+    {
+      status = ERROR;
+    }
+    position += strlen(relation_input) + 1;
+  }
+
+  //skip whitespace in string
+  if(status == NORMAL)
+  {
+    status = skipWhitespace(&position);
+  }
+
+  //parse second person
+  if(status == NORMAL)
+  {
+    status = parsePerson(&position, person2);
+  }
+
   if(status != NORMAL)
   {
     if(status == ERROR)
     {
+      if(person1->name_ != NULL)
+      {
+        free(person1->name_);
+      }
+      free(person1);
+      if(person2->name_ != NULL)
+      {
+        free(person2->name_);
+      }
+      free(person2);
       printError(ADD_PERSONS_USAGE);
     }
     return status;
   }
 
-  //skip whitespace in string
-  status = skipWhitespace(&position);
-  if(status != NORMAL)
-  {
-    printError(ADD_PERSONS_USAGE);
-    return status;
-  }
 
-  char* relation_input = strtok(position, " ");
-  if(relation_input == NULL)
-  {
-    printError(ADD_PERSONS_USAGE);
-    return ERROR;
-  }
-
-  position += strlen(relation_input) + 1;
-
-  //skip whitespace in string
-  status = skipWhitespace(&position);
-  if(status != NORMAL)
-  {
-    printf("encountered error while skipping whitespace");
-    printError(ADD_PERSONS_USAGE);
-    return status;
-  }
-
-  if(position >= position_of_last_char)
-  {
-    printError(ADD_PERSONS_USAGE);
-    return ERROR;
-  }
-  status = parsePerson(&position, person2);
-  if(status != NORMAL)
-  {
-    if(status == ERROR)
-    {
-      printError(ADD_PERSONS_USAGE);
-    }
-    return status;
-  }
-
-
+  
   enum _Relations_ relation;
+
   if(strcmp(relation_input, "mother") == 0)
   {
     relation = RELATION_MOTHER;
@@ -383,12 +397,17 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
   }
   else
   {
+    free(person1->name_);
+    free(person1);
+    free(person2->name_);
+    free(person2);
     printError(ADD_PERSONS_USAGE);
     return ERROR;
   }
 
   printf("person1 gender is %d\n", person1->gender_);
   printf("person2 gender is %d\n", person2->gender_);
+
   if(((relation == RELATION_MOTHER ||
      relation == RELATION_MOTHER_GRANDMOTHER ||
      relation == RELATION_MOTHER_GRANDFATHER) &&
@@ -398,6 +417,10 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
      relation == RELATION_FATHER_GRANDFATHER) &&
      person1->gender_ == FEMALE))
   {
+    free(person1->name_);
+    free(person1);
+    free(person2->name_);
+    free(person2);
     printError(SEX_DOES_NOT_MATCH);
     return ERROR;
   }
@@ -405,13 +428,26 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
   if(strcmp(person1->name_, person2->name_) == 0 &&
     person1->gender_ == person2->gender_)
   {
+    free(person1->name_);
+    free(person1);
+    free(person2->name_);
+    free(person2);
     printError(BOTH_PEOPLE_ARE_SAME);
     return ERROR;
   }
   
   status = addPersonToList(&person1, all_persons);
+  if(status != NORMAL)
+  {
+    return status;
+  }
   status = addPersonToList(&person2, all_persons);
-  
+  if(status != NORMAL)
+  {
+    return status;
+  } 
+  printf("successfully added persons");
+
   struct _Person_** parent;
   struct _Person_** grandparent;
 
@@ -438,6 +474,7 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
       movePersonIntoAnotherPerson(*parent, person1);
       removePersonFromList(all_persons, person1);
     }
+    //parent is already defined
     else
     {
       printError(RELATION_NOT_POSSIBLE);
@@ -458,7 +495,9 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
 
     if(*parent == NULL)
     {
+      printf("before creating question mark");
       status = createQuestionMarkPerson(question_mark_person_counter, parent);
+      printf("after creating question mark");
       if(status != NORMAL)
       {
         return status; 
@@ -489,18 +528,30 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
     }
     else
     {
-      //grandparent is already defined
+      //grandparent is already defined and no question mark
       printError(RELATION_NOT_POSSIBLE);
       return ERROR;
     }
-
+    //detect circles
+    
   }
-
+  return NORMAL;
 }
 
 //relation
 
-int getExistingPerson(struct _Person_* person_to_get, struct _PersonList_ person_list)
+
+int copyPersonIntoAnotherPerson(struct _Person_* destination, struct _Person_ source)
+{
+  destination->name_ = malloc(strlen(source.name_) + 1);
+  strncpy(destination->name_, source.name_, strlen(source.name_));
+  destination->gender_ = source.gender_;
+  destination->mother_ = source.mother_;
+  destination->father_ = source.father_;
+  return NORMAL;
+}
+
+int getExistingPerson(struct _Person_* person_to_get, struct _Person_** existing_person, struct _PersonList_ person_list)
 {
   int index = 0;
   for(index = 0; index < person_list.length_; index++)
@@ -508,26 +559,32 @@ int getExistingPerson(struct _Person_* person_to_get, struct _PersonList_ person
     if(strcmp(person_to_get->name_, person_list.list_[index]->name_) == 0 &&
         person_to_get->gender_ == person_list.list_[index]->gender_)
     {
-      *person_to_get = *(person_list.list_[index]);
+      free(person_to_get->name_);
+      free(person_to_get);
+      //copyPersonIntoAnotherPerson(person_to_get, *(person_list.list_[index]));
+      *existing_person = person_list.list_[index];
       return NORMAL;
     }
   }
+  free(person_to_get->name_);
+  free(person_to_get);
   return ERROR;
 }
 
 int createAncestorList(struct _Person_* person, struct _PersonList_* person_list)
 {
   int status = NORMAL;
+  
+  person_list->length_++;
+  person_list->list_ = realloc(person_list->list_, person_list->length_ * sizeof(struct _Person_*));
+  if(person_list->list_ == NULL)
+  {
+    printError(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
+  person_list->list_[person_list->length_ - 1] = person;
   if(person->father_ != NULL)
   {
-    person_list->length_++;
-    person_list->list_ = realloc(person_list->list_, person_list->length_ * sizeof(struct _Person_*));
-    if(person_list->list_ == NULL)
-    {
-      printError(OUT_OF_MEMORY);
-      return MEMORY_EXCEPTION;
-    }
-    person_list->list_[person_list->length_ - 1] = person->father_;
     status = createAncestorList(person->father_, person_list);
     if(status != NORMAL)
     {
@@ -536,14 +593,6 @@ int createAncestorList(struct _Person_* person, struct _PersonList_* person_list
   }
   if(person->mother_ != NULL)
   {
-    person_list->length_++;
-    person_list->list_ = realloc(person_list->list_, person_list->length_ * sizeof(struct _Person_*));
-    if(person_list->list_ == NULL)
-    {
-      printError(OUT_OF_MEMORY);
-      return MEMORY_EXCEPTION;
-    }
-    person_list->list_[person_list->length_ - 1] = person->mother_;
     status = createAncestorList(person->mother_, person_list);
     if(status != NORMAL)
     {
@@ -555,30 +604,69 @@ int createAncestorList(struct _Person_* person, struct _PersonList_* person_list
 
 int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_persons)
 {
-  
   struct _Person_* person1 = malloc(sizeof(struct _Person_));
-  struct _Person_* person2 = malloc(sizeof(struct _Person_));
-  char* position = console_input;
-  int status = parsePerson(&position, person1);
-  if(status != NORMAL)
+  if(person1 == NULL)
   {
-    if(status == ERROR)
-    {
-      printError(RELATIONSHIP_USAGE); 
-    }
-    return status;
+    printError(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
   }
-  status = parsePerson(&position, person2);
+  person1->name_ = NULL;
+  struct _Person_* person2 = malloc(sizeof(struct _Person_));
+  if(person1 == NULL)
+  {
+    printError(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
+  person2->name_ = NULL;
+  int status = NORMAL;
+
+  char* position = console_input;
+  if(console_input == NULL)
+  {
+    status = ERROR;
+  }
+  
+  if(status == NORMAL)
+  {
+    status = parsePerson(&position, person1);
+  }
+
+  if(status == NORMAL)
+  {
+    status = parsePerson(&position, person2);
+  }
+
   if(status != NORMAL)
   {
     if(status == ERROR)
     {
+      if(person1->name_ != NULL)
+      {
+        free(person1->name_);
+      }
+      free(person1);
+      if(person2->name_ != NULL)
+      {
+        free(person2->name_);
+      }
+      free(person2);
       printError(RELATIONSHIP_USAGE);
     }
     return status;
   }
 
-  status = getExistingPerson(person1, *all_persons);
+  struct _Person_* existing_person1;
+  struct _Person_* existing_person2;
+  status = getExistingPerson(person1, &existing_person1, *all_persons);
+  if(status == NORMAL)
+  {
+    status = getExistingPerson(person2, &existing_person2, *all_persons);
+  }
+  if(status == ERROR)
+  {
+    free(person2->name_);
+    free(person2);
+  }
   if(status != NORMAL)
   {
     if(status == ERROR)
@@ -588,18 +676,8 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
     return status;
   }
 
-  status = getExistingPerson(person2, *all_persons);
-  if(status != NORMAL)
-  {
-    if(status == ERROR)
-    {
-      printError(INEXISTANT_PERSONS);
-    }
-    return status;
-  }
-
-  if(strcmp(person1->name_, person2->name_) == 0 &&
-    person1->gender_ == person2->gender_)
+  if(strcmp(existing_person1->name_, existing_person2->name_) == 0 &&
+    existing_person1->gender_ == existing_person2->gender_)
   {
     printError(BOTH_PEOPLE_ARE_SAME);
     return ERROR;
@@ -607,19 +685,39 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
   
   //create ancestor lists of both persons
   struct _PersonList_* ancestors_of_person1 = malloc(sizeof(struct _PersonList_));
+  if(ancestors_of_person1 == NULL)
+  {
+    printError(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
   ancestors_of_person1->length_= 0;
   ancestors_of_person1->list_= malloc(sizeof(struct _Person_*));
+  if(ancestors_of_person1->list_ == NULL)
+  {
+    printError(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
 
   struct _PersonList_* ancestors_of_person2 = malloc(sizeof(struct _PersonList_));
+  if(ancestors_of_person2 == NULL)
+  {
+    printError(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
   ancestors_of_person2->length_= 0;
   ancestors_of_person2->list_= malloc(sizeof(struct _Person_*));
+  if(ancestors_of_person2->list_ == NULL)
+  {
+    printError(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
 
-  status = createAncestorList(person1, ancestors_of_person1);
+  status = createAncestorList(existing_person1, ancestors_of_person1);
   if(status != NORMAL)
   {
     return status;
   }
-  status = createAncestorList(person2, ancestors_of_person2);
+  status = createAncestorList(existing_person2, ancestors_of_person2);
   if(status != NORMAL)
   {
     return status;
@@ -665,67 +763,66 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
 
   enum _Relationship_ relationship = NO_RELATION;
 
-  if(person1->gender_ == MALE)
+  if(existing_person1->gender_ == MALE)
   {
-    if(person1->father_!= NULL && person1->mother_!= NULL &&
-       person2->father_!= NULL && person2->mother_!= NULL &&
-      person1->father_ == person2->father_ &&
-      person1->mother_ == person2->mother_)
+    if(existing_person1->father_!= NULL && existing_person1->mother_!= NULL &&
+       existing_person2->father_!= NULL && existing_person2->mother_!= NULL &&
+      existing_person1->father_ == existing_person2->father_ &&
+      existing_person1->mother_ == existing_person2->mother_)
     {
       relationship = BROTHER;
     }
-    else if(person2->father_ != NULL && person2->father_ == person1)
+    else if(existing_person2->father_ != NULL && existing_person2->father_ == existing_person1)
     {
-      relationship = FATHER; } else if( person1->father_ != NULL && person1->mother_ != NULL &&
-           ((person2->father_ != NULL && person2->father_->father_ != NULL &&
-            person2->father_->mother_ != NULL &&
-            person2->father_->father_ == person1->father_ &&
-            person2->father_->mother_ == person1->mother_) ||
-           (person2->mother_ != NULL && person2->mother_->father_ != NULL &&
-            person2->mother_->mother_ != NULL &&
-            person2->mother_->father_ == person1->father_ &&
-            person2->mother_->mother_ == person1->mother_)))
-             
+      relationship = FATHER; 
+    } 
+    else if(((existing_person2->father_ != NULL && existing_person2->father_->father_ != NULL &&
+            existing_person2->father_->mother_ != NULL &&
+            existing_person2->father_->father_ == existing_person1->father_ &&
+            existing_person2->father_->mother_ == existing_person1->mother_) ||
+           (existing_person2->mother_ != NULL && existing_person2->mother_->father_ != NULL &&
+            existing_person2->mother_->mother_ != NULL &&
+            existing_person2->mother_->father_ == existing_person1->father_ &&
+            existing_person2->mother_->mother_ == existing_person1->mother_)))
     {
       relationship = UNCLE;
     }
-    else if(person2->father_ != NULL && person2->father_->father_ != NULL &&
-            person2->father_->father_ == person1)
+    else if((existing_person2->mother_ != NULL && existing_person2->mother_->father_ == existing_person1) ||
+            (existing_person2->father_ != NULL && existing_person2->father_->father_ == existing_person1))
     {
       relationship = GRANDFATHER;  
     }
   }
   else
   {
-    if(person1->father_!= NULL && person1->mother_!= NULL &&
-       person2->father_!= NULL && person2->mother_!= NULL &&
-      person1->father_ == person2->father_ &&
-      person1->mother_ == person2->mother_)
+    if(existing_person1->father_!= NULL && existing_person1->mother_!= NULL &&
+       existing_person2->father_!= NULL && existing_person2->mother_!= NULL &&
+      existing_person1->father_ == existing_person2->father_ &&
+      existing_person1->mother_ == existing_person2->mother_)
     {
       relationship = SISTER;
     }
-    else if(person2->father_ != NULL && person2->father_ == person1)
+    else if(existing_person2->mother_ != NULL && existing_person2->mother_ == existing_person1)
     {
       relationship = MOTHER;
     }
-    else if( person1->father_ != NULL && person1->mother_ != NULL &&
-           ((person2->father_ != NULL && person2->father_->father_ != NULL &&
-            person2->father_->mother_ != NULL &&
-            person2->father_->father_ == person1->father_ &&
-            person2->father_->mother_ == person1->mother_) ||
-           (person2->mother_ != NULL && person2->mother_->father_ != NULL &&
-            person2->mother_->mother_ != NULL &&
-            person2->mother_->father_ == person1->father_ &&
-            person2->mother_->mother_ == person1->mother_)))
-             
+    else if(((existing_person2->father_ != NULL && existing_person2->father_->father_ != NULL &&
+            existing_person2->father_->mother_ != NULL &&
+            existing_person2->father_->father_ == existing_person1->father_ &&
+            existing_person2->father_->mother_ == existing_person1->mother_) ||
+           (existing_person2->mother_ != NULL && existing_person2->mother_->father_ != NULL &&
+            existing_person2->mother_->mother_ != NULL &&
+            existing_person2->mother_->father_ == existing_person1->father_ &&
+            existing_person2->mother_->mother_ == existing_person1->mother_)))
     {
       relationship = AUNT;
     }
-    else if(person2->father_ != NULL && person2->father_->father_ != NULL &&
-            person2->father_->father_ == person1)
+    else if((existing_person2->mother_ != NULL && existing_person2->mother_->mother_ == existing_person1) ||
+            (existing_person2->father_ != NULL && existing_person2->father_->mother_ == existing_person1))
     {
       relationship = GRANDMOTHER;  
     }
+    //printf("existing_person2 mother %p, existing_person2 grandmother %p, existing_person1 %p", existing_person2->mother_, existing_person2->mother_->mother_, existing_person1);
   }
 
   char* identifier = NULL;
@@ -762,9 +859,9 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
   
   if(relationship != NO_RELATION)
   {
-    char gender_person1 = person1->gender_ == MALE ? 'm' : 'f';
-    char gender_person2 = person2->gender_ == MALE ? 'm' : 'f';
-    printf("%s [%c] is the %s of %s [%c].\n", person1->name_, gender_person1, identifier, person2->name_, gender_person2);
+    char gender_person1 = existing_person1->gender_ == MALE ? 'm' : 'f';
+    char gender_person2 = existing_person2->gender_ == MALE ? 'm' : 'f';
+    printf("%s [%c] is the %s of %s [%c].\n", existing_person1->name_, gender_person1, identifier, existing_person2->name_, gender_person2);
   }
   return NORMAL;
 }
@@ -967,6 +1064,7 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
   }
   free(lines);
   free(buffer);
+  return NORMAL;
 }
 
 //-----------------------------------------------------------------------------
@@ -1000,6 +1098,7 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
     input_character = getchar();
   }
   //set last byte in buffer to zero
+  printf("came here\n");
   input_buffer[input_buffer_position] = '\0';
   *command_buffer = input_buffer;
 
@@ -1008,13 +1107,17 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
   //set arguments and command
   skipWhitespace(&position_in_command_buffer);
   *command = strtok(position_in_command_buffer, " ");
+  if(*command == NULL)
+  {
+    return;
+  }
 
   position_in_command_buffer += strlen(*command) + 1;
-
   
   if(*command_buffer + total_length_of_command_buffer  > position_in_command_buffer){
     *arguments = *command_buffer + strlen(*command) + 1;
   }
+  printf("reached the end\n");
 }
 
 
@@ -1077,6 +1180,14 @@ int main(int argc, char *argv[])
     {
       printf("in relationship command\n");
       return_status = checkIfPeopleAreRelated(arguments, all_persons);
+    }
+    else if(strcmp(command, "list") == 0)
+    {
+      printf("in list command\n");
+    }
+    else if(strcmp(command, "list") == 0)
+    {
+      
     }
     else
     {
