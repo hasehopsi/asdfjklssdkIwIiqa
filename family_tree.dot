@@ -3,7 +3,7 @@ digraph FamilyTree
   "Arcturus [m]" -> "Hester [f]";
   "Arcturus [m]" -> "Sirius [m]";
   "Cygnus [m]" -> "Ursula [f]";
-  "Cygnus [m]" -> "Phineas [m]";
+  "Cygnus [m]" -> "Phineas [m]"
   "Hester [f]";
   "Irma [f]";
   "Melania [f]";

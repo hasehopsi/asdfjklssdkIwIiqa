@@ -1577,13 +1577,14 @@ int drawAllPersonsToFile(char* arguments, struct _PersonList_* all_persons)
 
 int drawPersonsFromRootToFile(char* arguments, struct _PersonList_* all_persons)
 {
-  char* position = arguments;
-  char* last_char_of_arguments = arguments + strlen(arguments); 
   if(arguments == NULL)
   {
     printError(DRAW_USAGE);
     return ERROR;
   }
+  char* position = arguments;
+  char* last_char_of_arguments = arguments + strlen(arguments); 
+
 
   struct _Person_* person;
   int status = initializePerson(&person);
