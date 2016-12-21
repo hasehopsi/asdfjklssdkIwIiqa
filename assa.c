@@ -420,8 +420,7 @@ int removePersonFromPersonList(struct _PersonList_* list_of_persons, struct _Per
       //save the position of the freed person
       int position_of_person = index;
       //free the person
-      free(person->name_);
-      free(person);
+      freePerson(&person);
       break;
     } 
   }
@@ -640,10 +639,10 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
 
   if(((relation == RELATION_MOTHER ||
      relation == RELATION_MOTHER_GRANDMOTHER ||
-     relation == RELATION_MOTHER_GRANDFATHER) &&
+     relation == RELATION_MOTHER_GRANDMOTHER) &&
      person1->gender_ == MALE) ||
      ((relation == RELATION_FATHER ||
-     relation == RELATION_FATHER_GRANDMOTHER ||
+     relation == RELATION_FATHER_GRANDFATHER ||
      relation == RELATION_FATHER_GRANDFATHER) &&
      person1->gender_ == FEMALE))
   {
@@ -731,13 +730,20 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
 
     if(*parent == NULL)
     {
+      struct _Person_* question_mark;
       printf("before creating question mark");
-      status = createQuestionMarkPerson(question_mark_person_counter, parent);
+      status = createQuestionMarkPerson(question_mark_person_counter, &question_mark);
       printf("after creating question mark");
       if(status != NORMAL)
       {
         return status; 
       }
+      status = addPersonToList(&question_mark, all_persons);
+      if(status != NORMAL)
+      {
+        return status;
+      }
+      *parent = question_mark;
     }
 
     if(relation == RELATION_MOTHER_GRANDMOTHER || relation == RELATION_FATHER_GRANDMOTHER)
@@ -1053,8 +1059,8 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
     char gender_person2 = existing_person2->gender_ == MALE ? 'm' : 'f';
     printf("%s [%c] is the %s of %s [%c].\n", existing_person1->name_, gender_person1, identifier, existing_person2->name_, gender_person2);
   }
-  freePerson(existing_person1);
-  freePerson(existing_person2);
+  freePerson(&existing_person1);
+  freePerson(&existing_person2);
   return NORMAL;
 }
 
@@ -1825,6 +1831,6 @@ int main(int argc, char *argv[])
     }
     free(command_buffer); 
   } 
-  freePersonList(all_persons);
+  freePersonList(&all_persons);
   return return_status;
 }
