@@ -2331,14 +2331,16 @@ int main(int argc, char *argv[])
     {
       printf(CLOSE_MESSAGE);
       free(command_buffer);
+      return_status = NORMAL;
       break;
     }
     else if(strcmp(command, "EOF") == 0)
     {
       free(command_buffer);
+      return_status = NORMAL;
       break;
     }
-    if(strcmp(command, "add") == 0)
+    else if(strcmp(command, "add") == 0)
     {
       return_status = addPersonsWithRelationCommand(arguments, all_persons, &question_mark_person_counter);
     }
