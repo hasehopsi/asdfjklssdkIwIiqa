@@ -187,15 +187,17 @@ int initializeLineBuffer(struct _LineBuffer_** buffer)
     printError(OUT_OF_MEMORY);
     return MEMORY_EXCEPTION;
   }
+  return NORMAL;
 }
-void freeLineBuffer(struct _LineBuffer_* buffer)
+void freeLineBuffer(struct _LineBuffer_** buffer)
 {
   int index = 0;
-  for(index = 0; index < buffer->position_; index++)
+  for(index = 0; index < (*buffer)->position_; index++)
   {
-    free(buffer->data_[index]);
+    free((*buffer)->data_[index]);
   }
-  free(buffer);
+  free(*buffer);
+  *buffer = NULL;
 }
 
 //line buffer helper functions
@@ -212,6 +214,7 @@ int addLineToLineBuffer(struct _LineBuffer_* line_buffer, char* line)
       return MEMORY_EXCEPTION;
     }
   }
+  return NORMAL;
 }
 
 
@@ -233,10 +236,11 @@ int initializePerson(struct _Person_** person)
   return NORMAL;
 }
 
-void freePerson(struct _Person_* person)
+void freePerson(struct _Person_** person)
 {
-  free(person->name_);
-  free(person);
+  free((*person)->name_);
+  free(*person);
+  *person = NULL;
 }
 
 int parsePerson(char** person_string, struct _Person_* person)
@@ -274,7 +278,7 @@ int parsePerson(char** person_string, struct _Person_* person)
   //length of a persons name cannot be zero
   if(strlen(person->name_) == 0)
   {
-    freePerson(person);
+    freePerson(&person);
     return ERROR;
   }
 
@@ -345,15 +349,16 @@ int initializePersonList(struct _PersonList_** person_list)
   return NORMAL;
 }
 
-void freePersonList(struct _PersonList_* person_list)
+void freePersonList(struct _PersonList_** person_list)
 {
   int index = 0;
-  for(index = 0; index < person_list->length_; index++)
+  for(index = 0; index < (*person_list)->length_; index++)
   {
-    free(person_list->list_[index]);
+    freePerson(&((*person_list)->list_[index]));
   }
-  free(person_list->list_);
-  free(person_list);
+  free((*person_list)->list_);
+  free(*person_list);
+  *person_list = NULL;
 }
 
 int addPersonToList(struct _Person_** input_person, struct _PersonList_* person_list){
@@ -443,13 +448,13 @@ int getExistingPerson(struct _Person_* person_to_get, struct _Person_** existing
     if(strcmp(person_to_get->name_, person_list->list_[index]->name_) == 0 &&
         person_to_get->gender_ == person_list->list_[index]->gender_)
     {
-      freePerson(person_to_get);
+      freePerson(&person_to_get);
       //copyPersonIntoAnotherPerson(person_to_get, *(person_list.list_[index]));
       *existing_person = person_list->list_[index];
       return NORMAL;
     }
   }
-  freePerson(person_to_get);
+  freePerson(&person_to_get);
   return ERROR;
 }
 
@@ -846,60 +851,50 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
   {
     if(status == ERROR)
     {
-      freePerson(person1);
-      freePerson(person2);
+      freePerson(&person1);
+      freePerson(&person2);
       printError(RELATIONSHIP_INEXISTANT_PERSONS);
     }
     return status;
   }
+
   status = getExistingPerson(person2, &existing_person2, all_persons);
   if(status != NORMAL)
   {
     if(status == ERROR)
     {
-      freePerson(person1);
-      freePerson(person2);
+      freePerson(&person1);
+      freePerson(&person2);
+      freePerson(&existing_person1);
       printError(RELATIONSHIP_INEXISTANT_PERSONS);
     }
     return status;
   }
-  freePerson(person1);
-  freePerson(person2);
+  freePerson(&person1);
+  freePerson(&person2);
 
   if(strcmp(existing_person1->name_, existing_person2->name_) == 0 &&
     existing_person1->gender_ == existing_person2->gender_)
   {
+    freePerson(&existing_person1);
+    freePerson(&existing_person2);
     printError(RELATIONSHIP_BOTH_PEOPLE_ARE_SAME);
     return ERROR;
   }
   
   //create ancestor lists of both persons
-  struct _PersonList_* ancestors_of_person1 = malloc(sizeof(struct _PersonList_));
-  if(ancestors_of_person1 == NULL)
+  struct _PersonList_* ancestors_of_person1;
+  status = initializePersonList(&ancestors_of_person1);
+  if(status != NORMAL)
   {
-    printError(OUT_OF_MEMORY);
-    return MEMORY_EXCEPTION;
+    return status;
   }
-  ancestors_of_person1->length_= 0;
-  ancestors_of_person1->list_= malloc(sizeof(struct _Person_*));
-  if(ancestors_of_person1->list_ == NULL)
+  
+  struct _PersonList_* ancestors_of_person2;
+  status = initializePersonList(&ancestors_of_person2);
+  if(status != NORMAL)
   {
-    printError(OUT_OF_MEMORY);
-    return MEMORY_EXCEPTION;
-  }
-
-  struct _PersonList_* ancestors_of_person2 = malloc(sizeof(struct _PersonList_));
-  if(ancestors_of_person2 == NULL)
-  {
-    printError(OUT_OF_MEMORY);
-    return MEMORY_EXCEPTION;
-  }
-  ancestors_of_person2->length_= 0;
-  ancestors_of_person2->list_= malloc(sizeof(struct _Person_*));
-  if(ancestors_of_person2->list_ == NULL)
-  {
-    printError(OUT_OF_MEMORY);
-    return MEMORY_EXCEPTION;
+    return status;
   }
 
   status = createAncestorList(existing_person1, ancestors_of_person1);
@@ -907,6 +902,7 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
   {
     return status;
   }
+
   status = createAncestorList(existing_person2, ancestors_of_person2);
   if(status != NORMAL)
   {
@@ -939,7 +935,12 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
         break;
       }
     }
+    if(people_are_related)
+    {
+      break;
+    }
   }
+
   if(people_are_related)
   {
     printf("%s", RELATIONSHIP_EXISTANT);
@@ -1052,6 +1053,8 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
     char gender_person2 = existing_person2->gender_ == MALE ? 'm' : 'f';
     printf("%s [%c] is the %s of %s [%c].\n", existing_person1->name_, gender_person1, identifier, existing_person2->name_, gender_person2);
   }
+  freePerson(existing_person1);
+  freePerson(existing_person2);
   return NORMAL;
 }
 
@@ -1342,7 +1345,7 @@ int listAllPersons(char* arguments, struct _PersonList_* all_persons)
     printf("%s\n", lines_buffer->data_[index]);
   }
 
-  freeLineBuffer(lines_buffer);
+  freeLineBuffer(&lines_buffer);
   return NORMAL;
 }
 
@@ -1502,11 +1505,14 @@ int openDotFileForWriting(FILE** file_pointer, char* filename)
 
   sprintf(filename_with_extension, "%s.dot", filename);
   *file_pointer = fopen(filename_with_extension, "w");
+  free(filename_with_extension);
+
   if(*file_pointer == NULL)
   {
     printError(DRAW_ALL_COULD_NOT_WRITE_FILE); 
     return ERROR;
   }
+  return NORMAL;
 }
 
 int drawAllPersonsToFile(char* arguments, struct _PersonList_* all_persons)
@@ -1570,7 +1576,7 @@ int drawAllPersonsToFile(char* arguments, struct _PersonList_* all_persons)
   fprintf(output_file, "}\n");
   
   printf("%s", DRAW_ALL_SUCCESS);
-  freeLineBuffer(lines_buffer);
+  freeLineBuffer(&lines_buffer);
   fclose(output_file);
   return NORMAL;
 }
@@ -1656,7 +1662,7 @@ int drawPersonsFromRootToFile(char* arguments, struct _PersonList_* all_persons)
     return status;
   }
 
-  status = parsePersonListIntoLineBuffer(lines_buffer, all_persons);  
+  status = parsePersonListIntoLineBuffer(lines_buffer, ancestor_list);  
   if(status != NORMAL)
   {
     return status;
@@ -1676,7 +1682,7 @@ int drawPersonsFromRootToFile(char* arguments, struct _PersonList_* all_persons)
   fprintf(output_file, "}\n");
   
   printf("%s", DRAW_SUCCESS);
-  freeLineBuffer(lines_buffer);
+  freeLineBuffer(&lines_buffer);
   fclose(output_file);
   return NORMAL;
 }
@@ -1720,18 +1726,14 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
   //set arguments and command
   skipWhitespace(&position_in_command_buffer);
   *command = strtok(position_in_command_buffer, " ");
-  printf("before return");
   if(*command == NULL)
   {
     return;
   }
 
-  printf("here");
   position_in_command_buffer += strlen(*command) + 1;
-  printf("here2");
   
   if(*command_buffer + total_length_of_command_buffer > position_in_command_buffer){
-    printf("in here");
     *arguments = *command_buffer + strlen(*command) + 1;
   }
 }
@@ -1793,41 +1795,36 @@ int main(int argc, char *argv[])
     if(strcmp(command, "quit") == 0)
     {
       printf(CLOSE_MESSAGE);
-      exit(0);
+      free(command_buffer);
+      break;
     }
     else if(strcmp(command, "EOF") == 0)
     {
-      exit(0);
+      free(command_buffer);
+      break;
     }
-    else if(strcmp(command, "add") == 0)
+    if(strcmp(command, "add") == 0)
     {
-      printf("in add command\n");
       return_status = addPersonsWithRelationCommand(arguments, all_persons, &question_mark_person_counter);
     }
     else if(strcmp(command, "relationship") == 0)
     {
-      printf("in relationship command\n");
       return_status = checkIfPeopleAreRelated(arguments, all_persons);
     }
     else if(strcmp(command, "list") == 0)
     {
-      printf("in list command\n");
       return_status = listAllPersons(arguments, all_persons);
     }
     else if(strcmp(command, "draw-all") == 0)
     {
-      printf("in draw all command\n");
       return_status = drawAllPersonsToFile(arguments, all_persons);
     }
     else if(strcmp(command, "draw") == 0)
     {
-      printf("in draw command");
       return_status = drawPersonsFromRootToFile(arguments, all_persons);
     }
-
     free(command_buffer); 
   } 
-  free(all_persons->list_);
-  free(all_persons);
+  freePersonList(all_persons);
   return return_status;
 }
