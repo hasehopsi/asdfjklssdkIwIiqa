@@ -1,11 +1,22 @@
+//------------------------------------------------------------------------------
+//// assa.c
+////
+//// Group Assignment
+////
+//// Group: Group 6, study assistant Promitzer 
+////
+//// Authors: Stefan Maritsch 1635076 
+//// Blaz Mesarec 1414280
+////------------------------------------------------------------------------------
+////
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <assert.h>
-#include <ctype.h> //for isspace
+#include <ctype.h> 
 
-#define CLOSE_MESSAGE "bye\n"
+#define CLOSE_MESSAGE "Bye.\n"
 #define OUT_OF_MEMORY "[ERR] Out of memory.\n"
 #define COULD_NOT_READ_FILE "[ERR] Could not read file.\n"
 #define SUCCESSFULLY_READ_FILE "File parsing successful...\n"
@@ -36,18 +47,31 @@
 #define DRAW_COULD_NOT_WRITE_FILE "[ERR] Could not write file.\n"
 #define DRAW_SUCCESS "Creating DOT-file was successful.\n"
 
-#define ERROR (1)
+#define ERROR (-1)
 #define NORMAL (0)
-#define WRONG_USAGE_EXCEPTION (-1)
-#define MEMORY_EXCEPTION (-2)
-#define FILE_UNREADABLE_EXCEPTION (-3)
+#define WRONG_USAGE_EXCEPTION (1)
+#define MEMORY_EXCEPTION (2)
+#define FILE_UNREADABLE_EXCEPTION (3)
 
-enum _Gender_{
+
+//----------------------------------------------------------------------------
+//
+//  enum that describes the gender of a person
+//
+
+enum _Gender_
+{
   MALE,
   FEMALE
 };
 
-enum _Relations_{
+//----------------------------------------------------------------------------
+//
+//  enum that describes the relations used in the add command 
+//
+
+enum _Relations_
+{
   RELATION_MOTHER,
   RELATION_FATHER,
   RELATION_MOTHER_GRANDFATHER,
@@ -56,7 +80,14 @@ enum _Relations_{
   RELATION_FATHER_GRANDMOTHER
 };
 
-enum _Relationship_{
+
+//----------------------------------------------------------------------------
+//
+//  enum that describes the relations used in the relationship command 
+//
+
+enum _Relationship_
+{
   NO_RELATION,
   SISTER,
   BROTHER,
@@ -75,72 +106,78 @@ enum _Relationship_{
 //
 
 
-struct _Person_{
+struct _Person_
+{
     struct _Person_* father_;
     struct _Person_* mother_;
     enum _Gender_ gender_;
     char* name_;
 };
 
-struct _PersonList_{
+
+//----------------------------------------------------------------------------
+//
+// Struct that holds and manages a list of persons
+//
+
+struct _PersonList_
+{
   struct _Person_** list_;
   int length_;
   bool data_is_allocated_;
 };
 
-struct _LineBuffer_{
+
+//----------------------------------------------------------------------------
+//
+// Struct that holds and manages a list of lines (e.g an array of strings)
+//
+
+struct _LineBuffer_
+{
   char** data_;
   int position_;
   int length_;
   bool data_is_allocated_;
 };
 
-struct _TokenArray_{
-    char** data_;
-    int length_;
+
+//----------------------------------------------------------------------------
+//
+//  struct that holds a character buffer  
+//
+
+struct _CharacterBuffer_
+{
+  int length_;
+  int position_;
+  char* data_;
 };
 
-void debug(char* message){
-  printf("%s\n", message);
-}
+//----------------------------------------------------------------------------
+//
+//  Prints an error to the consolse
+//
+//  @param error -> the error that should be printed to the console
+//
 
-void printError(char* error){
+void printError(char* error)
+{
   printf("%s", error);
 }
 
 //string helper functions
-int tokenizeString(char* input_string, char* delimiter, struct _TokenArray_* output_array){
-  int out_array_size = 1;
-  int out_array_position = 0;
-  char** out_array = malloc(sizeof(char*));
 
-  char* token = strtok(input_string, delimiter); 
-  while (token != NULL){
-    
-    out_array[out_array_position] = (char*) malloc(sizeof(char) * (strlen(token) + 1));
-    strncpy(out_array[out_array_position], token, strlen(token) + 1);
-    out_array_position += 1;
-    if(out_array_position >= out_array_size)
-    {
-      out_array_size += 1;
-      out_array = (char**) realloc(out_array, out_array_size * sizeof(char*));
-      if(out_array == NULL)
-      {
-         printError(OUT_OF_MEMORY);        
-         return MEMORY_EXCEPTION;
-      }
-    }
-    token = strtok(NULL, delimiter);
-  }
-  output_array->data_ = out_array;
-  output_array->length_ = out_array_position - 1;
-  return NORMAL;
-}
-
+//----------------------------------------------------------------------------
+//
+//  Skips whitespace in a string. Overwrites argument pointer with next non-
+//  whitespace position in string.
+//
+//  @param string -> the string in which whitespace should be skipped.
+//
 
 int skipWhitespace(char** string)
 {
-  printf("string in skip whitespace is [%s]\n", *string);
   while((*string)[0] == ' ')
   {
     (*string)++;
@@ -149,14 +186,22 @@ int skipWhitespace(char** string)
       return ERROR;
     }
   }
-  printf("string out of skip whitespace is [%s]\n", *string);
   return NORMAL;
 }
+
+
+//----------------------------------------------------------------------------
+//
+//  Strips leading and trailing whitespace from a string by moving all char-
+//  acters to the beginning of the string and inserting \0 characters at the
+//  end of it.
+//
+//  @param string -> string to strip 
+//
 
 int stripWhitespace(char* string)
 {
   int index = 0;
-  printf("string was: [%s]\n", string);
   while(isspace(string[0]))
   {
     for(index = 0; index < strlen(string); index++)
@@ -170,9 +215,139 @@ int stripWhitespace(char* string)
     string[index] = '\0';
     index--;
   }
-  printf("string is now: [%s]\n", string);
   return NORMAL;
 }
+
+
+//----------------------------------------------------------------------------
+//
+//  Sorting function used by qsort to sort the output of the list command. 
+//
+//  @param first_string_pointer -> first comparison argument
+//  @param second_string_pointer -> second comparison argument
+//
+
+int linesComparisonFunction(const void* first_string_pointer, const void* second_string_pointer)
+{
+  int difference = 0;
+  int position = 0;
+  char* first_string = *(char**)first_string_pointer;
+  char* second_string = *(char**)second_string_pointer;
+  while(difference == 0)
+  {
+    char a = first_string[position];
+    char b = second_string[position];
+    //questionmarks always appear on top of the list
+    if(position == 0)
+    {
+      if(a == '?')
+      {
+        a = ' ';
+      }
+      if(b == '?')
+      {
+        b = ' ';
+      }
+    }
+    //remap to sort Sirius Jr. and Sirius the right way
+    if(a == '[')
+    {
+      a = ' '; 
+    }
+    if(b == '[')
+    {
+      b = ' '; 
+    }
+    difference = a - b;
+    position++;
+  }
+  return difference;
+}
+
+
+//----------------------------------------------------------------------------
+//
+//  Sorting function used by qsort to sort dot output files generated by
+//  draw or draw-all
+//
+//  @param first_string_pointer -> first comparison argument
+//  @param second_string_pointer -> second comparison argument
+//
+
+int drawAllLinesComparisonFunction(const void* first_string_pointer, const void* second_string_pointer)
+{
+  int difference = 0;
+  int position = 0;
+  int parenthesis_count = 0;
+  bool first_char_of_name = false;
+
+  char* first_string = *(char**)first_string_pointer;
+  char* second_string = *(char**)second_string_pointer;
+  while(difference == 0 && parenthesis_count < 2)
+  {
+    char a = first_string[position];
+    char b = second_string[position];
+    if(first_char_of_name)
+    {
+      if(a == '?')
+      {
+        a = ' ';
+      }
+      if(b == '?')
+      {
+        b = ' ';
+      }
+      first_char_of_name = false;
+    }
+    if(a == '[')
+    {
+      a = ' '; 
+    }
+    if(b == '[')
+    {
+      b = ' '; 
+    }
+    if(a == '"' && b == '"')
+    {
+      parenthesis_count++;
+      first_char_of_name = true;
+    } 
+    difference = a - b;
+    position++;
+  }
+  if(difference != 0)
+  {
+    return difference;
+  }
+
+  char* first_string_second_person_gender = strchr(first_string + position, '[');
+  char* second_string_second_person_gender = strchr(second_string + position, '[');
+  
+  if(first_string_second_person_gender != NULL && 
+      second_string_second_person_gender != NULL)
+  {
+     return first_string_second_person_gender[1] - second_string_second_person_gender[1]; 
+  }
+  else
+  {
+    return 1;
+  }
+}
+
+
+//line buffer helper functions
+
+//----------------------------------------------------------------------------
+//
+//  Function that initializes a new LineBuffer
+//  
+//  @param buffer -> pointer pointer to a _LineBuffer_ that should be created
+//  @param allocate_data -> boolean that sets whether or not char* line
+//  pointers should be free'd when struct is free'd
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory or NORMAL on
+//  success
+//
 
 int initializeLineBuffer(struct _LineBuffer_** buffer, bool allocate_data)
 {
@@ -193,6 +368,16 @@ int initializeLineBuffer(struct _LineBuffer_** buffer, bool allocate_data)
   }
   return NORMAL;
 }
+
+
+//----------------------------------------------------------------------------
+//
+//  Function that frees a LineBuffer struct 
+//
+//  @param buffer -> pointer to LineBuffer that should be free'd 
+//
+//
+
 void freeLineBuffer(struct _LineBuffer_** buffer)
 {
   int index = 0;
@@ -208,7 +393,17 @@ void freeLineBuffer(struct _LineBuffer_** buffer)
   *buffer = NULL;
 }
 
-//line buffer helper functions
+
+//----------------------------------------------------------------------------
+//
+//  Function that adds a line to a LineBuffer struct
+//
+//  @param line -> line to add
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory or NORMAL on
+//  success
+//
+
 int addLineToLineBuffer(struct _LineBuffer_* line_buffer, char* line)
 {
   line_buffer->data_[line_buffer->position_++] = line;
@@ -226,8 +421,91 @@ int addLineToLineBuffer(struct _LineBuffer_* line_buffer, char* line)
 }
 
 
+//----------------------------------------------------------------------------
+//
+//  Function that initializes a CharacterBuffer struct 
+//
+//  @param buffer -> pointer to the buffer that should be initialized 
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory or NORMAL on
+//  success
+//
+//
+
+int initializeCharacterBuffer(struct _CharacterBuffer_** buffer)
+{
+  (*buffer) = malloc(sizeof(struct _CharacterBuffer_));
+  if((*buffer) == NULL)
+  {
+    printf(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
+  (*buffer)->length_ = 10;
+  (*buffer)->position_ = 0;
+  (*buffer)->data_ = malloc((*buffer)->length_ * sizeof(char));
+  if((*buffer)->data_ == NULL)
+  {
+    printf(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
+  return NORMAL;
+}
+
+
+//----------------------------------------------------------------------------
+//
+//  Function that frees a CharacterBuffer struct 
+//
+//  @param buffer -> pointer to the CharacterBuffer struct that should be
+//  free'd 
+//
+
+void freeCharacterBuffer(struct _CharacterBuffer_** buffer)
+{
+  free((*buffer)->data_);
+  free(*buffer);
+  *buffer = NULL;
+}
+
+
+//----------------------------------------------------------------------------
+//
+//  Function that writes a Character to a CharacterBuffer struct
+//
+//  @param buffer -> CharacterBuffer struct to which the character should be
+//  written
+//
+
+int writeCharacterToCharacterBuffer(struct _CharacterBuffer_* buffer, char character)
+{
+  buffer->data_[buffer->position_++] = character;
+  if(buffer->position_ >= buffer->length_)
+  {
+    buffer->length_ += 10;
+    buffer->data_ = realloc(buffer->data_, buffer->length_ * sizeof(char));
+    if(buffer == NULL)
+    {
+      printError(OUT_OF_MEMORY); 
+      return MEMORY_EXCEPTION;
+    }
+  }
+  return NORMAL;
+}
+
+
+
 //person helper functions
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that initializes a Person struct
+//
+//  @param person -> pointer to a Person struct that should be initialized
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory or NORMAL on
+//  success
+//
 
 int initializePerson(struct _Person_** person)
 {
@@ -249,6 +527,14 @@ int initializePerson(struct _Person_** person)
   return NORMAL;
 }
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that frees a Person struct
+//
+//  @param Person -> the Person struct that should be free'd 
+//
+
 void freePerson(struct _Person_** person)
 {
   free((*person)->name_);
@@ -256,15 +542,32 @@ void freePerson(struct _Person_** person)
   *person = NULL;
 }
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that parses a person from a Person string (e.g Stefan [m])
+//
+//  @param person_string -> Pointer to beginning of string which contains the 
+//  person. Is overwritten to first position after person in person_string 
+//  when person was successfully parsed.
+//  @param Person -> pointer to Person where parsed Person is stored 
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR,
+//  when no person is found within the string, otherwise NORMAL
+//  
+//
+
 int parsePerson(char** person_string, struct _Person_* person)
 {
   bool person_found = false;
   int length_of_string = strlen(*person_string);
   char* string_position = *person_string;
 
-  while(!person_found){
+  while(!person_found)
+  {
     string_position = strchr(string_position, '[');
-    if(string_position == NULL){
+    if(string_position == NULL)
+    {
       return ERROR;
     }
     if(string_position + 2 <= *person_string + length_of_string &&
@@ -303,13 +606,27 @@ int parsePerson(char** person_string, struct _Person_* person)
   return NORMAL;
 }
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that copies an initialized person struct into another
+//  initialized person struct
+//
+//  @param destination -> the Person struct where data get written
+//  @param source -> the Person struct whose data is copied 
+//
+//  
+//  @return MEMORY_EXCEPTION on failure to allocate memory or NORMAL on
+//  success
+//
+
 int copyPersonIntoAnotherPerson(struct _Person_* destination, struct _Person_* source)
 {
   destination->name_ = realloc(destination->name_, (strlen(source->name_) + 1) * sizeof(char));
   if(destination->name_ == NULL)
   {
     printError(OUT_OF_MEMORY);
-    return ERROR;
+    return MEMORY_EXCEPTION;
   }
   strncpy(destination->name_, source->name_, strlen(source->name_) + 1);
   destination->gender_ = source->gender_;
@@ -318,7 +635,20 @@ int copyPersonIntoAnotherPerson(struct _Person_* destination, struct _Person_* s
   return NORMAL;
 }
 
-int createQuestionMarkPerson(int* question_mark_person_counter, struct _Person_** pointer_to_person)
+
+//----------------------------------------------------------------------------
+//
+//  Function that creates a question mark person.
+//
+//  @param question_mark_person_counter -> global counter for question mark
+//  persons
+//  @param person -> pointer to store person in
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory or NORMAL on
+//  success
+//
+
+int createQuestionMarkPerson(int* question_mark_person_counter, struct _Person_** person)
 {
   struct _Person_* question_mark_person;
   int status = initializePerson(&question_mark_person);
@@ -337,11 +667,24 @@ int createQuestionMarkPerson(int* question_mark_person_counter, struct _Person_*
 
   snprintf(question_mark_person->name_, 10, "?%d", *question_mark_person_counter);
   (*question_mark_person_counter)++;
-  *pointer_to_person = question_mark_person;
+  *person = question_mark_person;
   return NORMAL;
 }
 
 //person list helper functions
+
+
+//----------------------------------------------------------------------------
+//
+//  Function that initializes a PersonList struct
+//
+//  @param person_list -> pointer to store PersonList in
+//  @param data_allocated -> if true, persons in personList are free'd when
+//  PersonList is free'd
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory or NORMAL on
+//  success
+//
 
 int initializePersonList(struct _PersonList_** person_list, bool data_allocated)
 {
@@ -351,8 +694,8 @@ int initializePersonList(struct _PersonList_** person_list, bool data_allocated)
     printError(OUT_OF_MEMORY);
     return MEMORY_EXCEPTION;
   } 
-  (*person_list)->length_= 0;
-  (*person_list)->list_= malloc(sizeof(struct _Person_*));
+  (*person_list)->length_ = 0;
+  (*person_list)->list_ = malloc(sizeof(struct _Person_*));
   (*person_list)->data_is_allocated_ = data_allocated;
   if((*person_list)->list_ == NULL)
   {
@@ -362,12 +705,19 @@ int initializePersonList(struct _PersonList_** person_list, bool data_allocated)
   return NORMAL;
 }
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that frees a PersonList struct
+//
+//  @param person_list-> the PersonList struct that should be free'd 
+//
+
 void freePersonList(struct _PersonList_** person_list)
 {
   int index = 0;
   if((*person_list)->data_is_allocated_)
   {
-    printf("deleted Person data as flag was true\n");
     for(index = 0; index < (*person_list)->length_; index++)
     {
       freePerson(&((*person_list)->list_[index]));
@@ -378,7 +728,17 @@ void freePersonList(struct _PersonList_** person_list)
   *person_list = NULL;
 }
 
-int addPersonToList(struct _Person_** input_person, struct _PersonList_* person_list){
+
+//----------------------------------------------------------------------------
+//
+//  Function that adds a Person struct to a PersonList struct 
+//
+//  @param Person -> the Person struct that should be added 
+//  @param person_list -> the PersonList struct the Person should be added to
+//
+
+int addPersonToList(struct _Person_** input_person, struct _PersonList_* person_list)
+{
   int index = 0;
   bool person_already_exists = false;
   struct _Person_* existing_person = NULL;
@@ -404,7 +764,6 @@ int addPersonToList(struct _Person_** input_person, struct _PersonList_* person_
       return MEMORY_EXCEPTION;
     }
     person_list->list_[person_list->length_ - 1] = new_person;
-    printf("added person %s \n", new_person->name_);
   }
   else
   {
@@ -413,17 +772,19 @@ int addPersonToList(struct _Person_** input_person, struct _PersonList_* person_
     free(new_person);
     *input_person = existing_person;
   }
-  printf("%p mother %p father\n", (*input_person)->mother_, (*input_person)->father_);
-  if((*input_person)->mother_ != NULL)
-  {
-    printf("mother is %s\n", (*input_person)->mother_->name_);
-  }
-  if((*input_person)->father_ != NULL)
-  {
-    printf("father is %s\n", (*input_person)->father_->name_);
-  }
   return NORMAL; 
 }
+
+
+//----------------------------------------------------------------------------
+//
+//  Function that removes a Person struct from a PersonList struct 
+//
+//  @param list_of_persons -> PersonList from which Person struct should be 
+//  removed
+//  @param Person -> pointer the Person struct that should be removed from the 
+//  list 
+//
 
 int removePersonFromPersonList(struct _PersonList_* list_of_persons, struct _Person_* person)
 {
@@ -456,6 +817,20 @@ int removePersonFromPersonList(struct _PersonList_* list_of_persons, struct _Per
   return NORMAL;
 }
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that gets a Person from a PersonList struct 
+//
+//  @param person_to_get -> the Person struct that should be searched 
+//  @param existing_person -> the Person struct from person_list
+//  @param person_list -> the PersonList in which person_to_get should be 
+//  searched
+//
+//  @return ERROR on failure to find person_to_get in PersonList memory or 
+//  NORMAL on success
+//
+
 int getExistingPerson(struct _Person_* person_to_get, struct _Person_** existing_person, struct _PersonList_* person_list)
 {
   int index = 0;
@@ -473,18 +848,24 @@ int getExistingPerson(struct _Person_* person_to_get, struct _Person_** existing
   return ERROR;
 }
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that creates a list of all ancestors of a person. (contains
+//  person itself)
+//
+// 
+//  @param person -> person whose ancestors should be searched.
+//  @param person_list -> list to store results in.
+//
+
 int createAncestorList(struct _Person_* person, struct _PersonList_* person_list)
 {
-  int status = NORMAL;
-  
-  person_list->length_++;
-  person_list->list_ = realloc(person_list->list_, person_list->length_ * sizeof(struct _Person_*));
-  if(person_list->list_ == NULL)
+  int status = addPersonToList(&person, person_list);
+  if(status != NORMAL)
   {
-    printError(OUT_OF_MEMORY);
-    return MEMORY_EXCEPTION;
+    return status;
   }
-  person_list->list_[person_list->length_ - 1] = person;
   if(person->father_ != NULL)
   {
     status = createAncestorList(person->father_, person_list);
@@ -503,6 +884,19 @@ int createAncestorList(struct _Person_* person, struct _PersonList_* person_list
   }
   return NORMAL;
 }
+
+
+//----------------------------------------------------------------------------
+//
+//  recursive Helper function for detectCircles.
+//
+//  @param person_to_check -> the Person struct that should be detected in 
+//  ancestors
+//  @param starting_persons -> recursively used parameter that holds ancestors
+//  of person_to_check
+//
+//  @return 1 if person was found, 0 otherwise
+//
 
 int detectCirclesRecursiveSearch(struct _Person_* person_to_check, struct _Person_* starting_person)
 {
@@ -526,6 +920,17 @@ int detectCirclesRecursiveSearch(struct _Person_* person_to_check, struct _Perso
   return return_value;
 }
 
+//----------------------------------------------------------------------------
+//
+//  Function that detects circle relations. (checks if a person can reach
+//  itself by propagating through its ancestors)
+//
+//  @param person_to_check -> the Person struct that should checked for circle
+//  relations
+//
+//  @return true if circle relationship was detected, false otherwise
+//
+
 bool detectCircles(struct _Person_* person_to_check)
 {
   int return_value = 0;  
@@ -543,6 +948,24 @@ bool detectCircles(struct _Person_* person_to_check)
   }
   return return_value == 1 ? true : false;
 }
+
+
+//----------------------------------------------------------------------------
+//
+//  Function that implements the add command. It parses the arguments that
+//  have the form <person1> relationship <person2> and adds the persons and 
+//  their relationship the the PersonList all_persons if the relationship 
+//  between them is valid. Prints Errors to the console on failure.
+//
+//  @param console_input -> string of arguments that comes from the user 
+//  @param all_persons -> PersonList struct that contains the tree to 
+//  which the new persons should be added.
+//  @param question_mark_person -> integer that tracks how many question
+//  mark persons have been added yet
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR on failure
+//  to successfully add persons, NORMAL on success
+//
 
 int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_persons, int* question_mark_person_counter)
 {
@@ -575,7 +998,6 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
   if(status == NORMAL)
   {
     relation_input = strtok(position, " ");
-    printf("relation input is %s\n", relation_input);
     if(relation_input == NULL)
     {
       status = ERROR;
@@ -651,9 +1073,6 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
     return ERROR;
   }
 
-  printf("person1 gender is %d\n", person1->gender_);
-  printf("person2 gender is %d\n", person2->gender_);
-
   if(((relation == RELATION_MOTHER ||
      relation == RELATION_MOTHER_GRANDMOTHER ||
      relation == RELATION_MOTHER_GRANDMOTHER) &&
@@ -689,7 +1108,6 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
   {
     return status;
   } 
-  printf("successfully added persons");
 
   struct _Person_** parent;
   struct _Person_** grandparent;
@@ -703,12 +1121,10 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
     {
       parent = &(person2->father_);
     }
-    printf("person2->father %p, person2->mother %p, parent %p", person2->father_, person2->mother_, *parent);
 
     if(*parent == NULL)
     {
       *parent = person1;
-      printf("Normally added mother %s to %s\n", person1->name_, person2->name_);
     }
     else if((*parent)->name_[0] == '?' &&
         (*parent)->mother_ == person1->mother_ &&
@@ -749,9 +1165,7 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
     if(*parent == NULL)
     {
       struct _Person_* question_mark;
-      printf("before creating question mark");
       status = createQuestionMarkPerson(question_mark_person_counter, &question_mark);
-      printf("after creating question mark");
       if(status != NORMAL)
       {
         return status; 
@@ -775,7 +1189,6 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
 
     if(*grandparent == NULL)
     {
-      //grandparent doesn't exist yet so make person new grandparent
       *grandparent = person1;
     }
     else if((*grandparent)->name_[0] == '?' &&
@@ -796,10 +1209,8 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
       printError(ADD_RELATION_NOT_POSSIBLE);
       return ERROR;
     }
-    //detect circles
     if(detectCircles(person1))
     {
-      printf("Detected a circle!\n");
       //delete all relations
       if((*parent)->name_[0] == '?')
       {
@@ -815,7 +1226,17 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
   return NORMAL;
 }
 
-//relation
+//----------------------------------------------------------------------------
+//
+//  Function that implements the relation command. Checks if two people
+//  have a relation in the tree.
+//
+//  @param console_input -> arguments from the user
+//  @param all_persons -> Person list used to check relations of persons
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR if any
+//  of the defined input errors occured or NORMAL on success
+//
 
 int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_persons)
 {
@@ -865,7 +1286,6 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
   status = getExistingPerson(person1, &existing_person1, all_persons);
   if(status != NORMAL)
   {
-    printf("first person inexistant\n");
     if(status == ERROR)
     {
       freePerson(&person2);
@@ -877,7 +1297,6 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
   status = getExistingPerson(person2, &existing_person2, all_persons);
   if(status != NORMAL)
   {
-    printf("second person inexistant\n");
     if(status == ERROR)
     {
       printError(RELATIONSHIP_INEXISTANT_PERSONS);
@@ -923,19 +1342,6 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
 
   int index_ancestors1 = 0;
   int index_ancestors2 = 0;
-  
-  /*
-  printf("ancestorlist1 length: %d", ancestors_of_person1->length_);
-  printf("ancestorlist2 length: %d", ancestors_of_person2->length_);
-  for(int i = 0; i < ancestors_of_person1->length_; i++)
-  {
-    printf("ancestor person 1: %p\n", ancestors_of_person1->list_[i]);
-  }
-  for(int i = 0; i < ancestors_of_person2->length_; i++)
-  {
-    printf("ancestor person 2: %p\n", ancestors_of_person2->list_[i]);
-  }
-  */
 
   bool people_are_related = false;
   for(index_ancestors1 = 0; index_ancestors1 < ancestors_of_person1->length_; index_ancestors1++)
@@ -1027,7 +1433,6 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
     {
       relationship = GRANDMOTHER;  
     }
-    //printf("existing_person2 mother %p, existing_person2 grandmother %p, existing_person1 %p", existing_person2->mother_, existing_person2->mother_->mother_, existing_person1);
   }
 
   char* identifier = NULL;
@@ -1072,51 +1477,20 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
 }
 
 
+//----------------------------------------------------------------------------
+//
+//  Function that implements the list command 
+//
+//  @param console_input -> input from the user
+//  @param all_persons -> list of persons that should be listed
+//  
+//  @return MEMORY_EXCEPTION on failure to allocate memory or ERROR if any
+//  of the defined errors occured, or NORMAL on success
+//
 
-
-
-int linesComparisonFunction(const void* first_string_pointer, const void* second_string_pointer)
+int listAllPersons(char* console_input, struct _PersonList_* all_persons)
 {
-  int difference = 0;
-  int position = 0;
-  char* first_string = *(char**)first_string_pointer;
-  char* second_string = *(char**)second_string_pointer;
-  while(difference == 0)
-  {
-    char a = first_string[position];
-    char b = second_string[position];
-    //questionmarks always appear on top of the list
-    if(position == 0)
-    {
-      if(a == '?')
-      {
-        a = ' ';
-      }
-      if(b == '?')
-      {
-        b = ' ';
-      }
-    }
-    //remap to sort Sirius Jr. and Sirius the right way
-    if(a == '[')
-    {
-      a = ' '; 
-    }
-    if(b == '[')
-    {
-      b = ' '; 
-    }
-    difference = a - b;
-    position++;
-  }
-  printf("comparing %s and %s, difference is: %d\n", first_string, second_string, difference);
-  return difference;
-}
-
-
-int listAllPersons(char* arguments, struct _PersonList_* all_persons)
-{
-  if(arguments != NULL)
+  if(console_input != NULL)
   {
     printError(LIST_WRONG_USAGE);
     return ERROR;
@@ -1164,86 +1538,18 @@ int listAllPersons(char* arguments, struct _PersonList_* all_persons)
   return NORMAL;
 }
 
-bool personHasChildrenInList(struct _Person_* person, struct _PersonList_* list_of_persons)
-{
-  int index = 0; 
-  for(index = 0; index < list_of_persons->length_; index++)
-  {
-    struct _Person_* person_from_list = list_of_persons->list_[index];
-    if(person_from_list->father_ == person || person_from_list->mother_ == person)
-    {
-      printf("person %s has children\n", person->name_);
-      return true;
-    }
-  }
-  printf("person %s does not have children\n", person->name_);
-  return false;
-}
 
-
-int drawAllLinesComparisonFunction(const void* first_string_pointer, const void* second_string_pointer)
-{
-  int difference = 0;
-  int position = 0;
-  int parenthesis_count = 0;
-  bool first_char_of_name = false;
-
-  char* first_string = *(char**)first_string_pointer;
-  char* second_string = *(char**)second_string_pointer;
-  while(difference == 0 && parenthesis_count < 2)
-  {
-    char a = first_string[position];
-    char b = second_string[position];
-    if(first_char_of_name)
-    {
-      if(a == '?')
-      {
-        a = ' ';
-      }
-      if(b == '?')
-      {
-        b = ' ';
-      }
-      first_char_of_name = false;
-    }
-    if(a == '[')
-    {
-      a = ' '; 
-    }
-    if(b == '[')
-    {
-      b = ' '; 
-    }
-    if(a == '"' && b == '"')
-    {
-      parenthesis_count++;
-      first_char_of_name = true;
-    } 
-    difference = a - b;
-    position++;
-  }
-  if(difference != 0)
-  {
-    printf("comparing %s and %s, difference is: %d\n", first_string, second_string, difference);
-    return difference;
-  }
-
-  printf("first person is equal\n");
-  //first person is equal -> check second person gender
-  char* first_string_second_person_gender = strchr(first_string + position, '[');
-  char* second_string_second_person_gender = strchr(second_string + position, '[');
-  printf("assigned char*ers\n");
-  
-  if(first_string_second_person_gender != NULL && 
-      second_string_second_person_gender != NULL)
-  {
-     return first_string_second_person_gender[1] - second_string_second_person_gender[1]; 
-  }
-  else
-  {
-    return 1;
-  }
-}
+//----------------------------------------------------------------------------
+//
+//  Function that creates a LineBuffer from a person_list which contains the
+//  person_list in dot format.
+//
+//  @param lines_buffer -> the buffer within which lines should be stored 
+//  @param person_list -> the list of persons used to create the buffer
+//   
+//  @return MEMORY_EXCEPTION on failure to allocate memory or NORMAL on
+//  success
+//
 
 int parsePersonListIntoLineBuffer(struct _LineBuffer_* lines_buffer, struct _PersonList_* person_list)
 {
@@ -1313,6 +1619,39 @@ int parsePersonListIntoLineBuffer(struct _LineBuffer_* lines_buffer, struct _Per
   return NORMAL;
 }
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that opens a file for reading
+//
+//  @param file_pointer -> file pointer that is being assigned in the Function 
+//  @param filename -> name of the file to open 
+//
+//  @return ERROR if file cannot be opened,  NORMAL otherwise
+//
+
+int openDotFileForReading(FILE** file_pointer, char* filename)
+{
+  *file_pointer = fopen(filename, "r");
+  if(*file_pointer == NULL)
+  {
+    return ERROR;
+  }
+  return NORMAL;
+}
+
+
+//----------------------------------------------------------------------------
+//
+//  Function that creates/overwrites a dot file for writing. (automatically 
+//  appends .dot to the filename)
+//
+//  @param file_pointer -> file pointer that is being assigned in the Function
+//  @param filename -> name of the file to create/overwrite
+//
+//  @return ERROR if file cannot be created/overwritten, NORMAL otherwise
+//
+
 int openDotFileForWriting(FILE** file_pointer, char* filename)
 {
   int filename_length = strlen(filename) + 4 + 1;
@@ -1329,6 +1668,19 @@ int openDotFileForWriting(FILE** file_pointer, char* filename)
   }
   return NORMAL;
 }
+
+//----------------------------------------------------------------------------
+//
+//  Function that implements the draw-all command.
+//  Filename is parsed out of user arguments, and used to create new dot file
+//  with all person in it.
+//
+//  @param arguments -> user supplied arguments
+//  @param all_persons -> list of all persons
+//  
+//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR if one
+//  of the defined errors is triggered, or NORMAL on success
+//
 
 int drawAllPersonsToFile(char* arguments, struct _PersonList_* all_persons)
 {
@@ -1381,7 +1733,8 @@ int drawAllPersonsToFile(char* arguments, struct _PersonList_* all_persons)
   qsort(lines_buffer->data_, lines_buffer->position_, sizeof(char*), drawAllLinesComparisonFunction);
 
   //write lines_buffer to output file
-  fprintf(output_file, "digraph FamilyTree\n"); fprintf(output_file, "{\n");
+  fprintf(output_file, "digraph FamilyTree\n"); 
+  fprintf(output_file, "{\n");
 
   int index = 0;
   for(index = 0; index < lines_buffer->position_; index++)
@@ -1502,128 +1855,161 @@ int drawPersonsFromRootToFile(char* arguments, struct _PersonList_* all_persons)
   return NORMAL;
 }
 
-//-----------------------------------------------------------------------------
+
+
+//----------------------------------------------------------------------------
 //
-// Function that parses dot files
+//  Function that parses a line from a dot_file. It extracts and initializes
+//  the persons in the line. It returns an error if both persons are the
+//  same person.
 //
-// @param command_buffer buffer to write input to
+//  @param input_string -> one line of the file that should be parsed
+//  @param peopleList -> struct to store persons in the line
+//  @param num_people -> number of people that should be in the line
 //
-// @return int
+//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR, if a 
+//  parsing error is encountered, or NORMAL on success
 //
-//
 
-struct _CharacterBuffer_{
-  int length_;
-  int position_;
-  char* data_;
-};
-
-int initializeCharacterBuffer(struct _CharacterBuffer_** buffer)
-{
-  (*buffer) = malloc(sizeof(struct _CharacterBuffer_));
-  if((*buffer) == NULL)
-  {
-    printf(OUT_OF_MEMORY);
-    return MEMORY_EXCEPTION;
-  }
-  (*buffer)->length_ = 10;
-  (*buffer)->position_ = 0;
-  (*buffer)->data_ = malloc((*buffer)->length_ * sizeof(char));
-  if((*buffer)->data_ == NULL)
-  {
-    printf(OUT_OF_MEMORY);
-    return MEMORY_EXCEPTION;
-  }
-  return NORMAL;
-}
-
-int writeCharacterToCharacterBuffer(struct _CharacterBuffer_* buffer, char character)
-{
-  buffer->data_[buffer->position_++] = character;
-  if(buffer->position_ >= buffer->length_)
-  {
-    buffer->length_ += 10;
-    buffer->data_ = realloc(buffer->data_, buffer->length_ * sizeof(char));
-    if(buffer == NULL)
-    {
-      printError(OUT_OF_MEMORY); 
-      return MEMORY_EXCEPTION;
-    }
-  }
-  return NORMAL;
-}
-
-void freeCharacterBuffer(struct _CharacterBuffer_** buffer)
-{
-  free((*buffer)->data_);
-  free(*buffer);
-  *buffer = NULL;
-}
-
-int openDotFileForReading(FILE** file_pointer, char* filename)
-{
-  *file_pointer = fopen(filename, "r");
-  if(file_pointer == NULL)
-  {
-    return ERROR;
-  }
-  return NORMAL;
-}
-
-int parsePersonsFromInputFileLine(char* input_string, struct _PersonList_* peopleList, int num_people)
+int parsePersonsFromInputFileLine(char* input_string, struct _PersonList_* people_list, int num_people)
 {
   int index = 0;
   int entries_made = 0;
   bool in_parenthesis = false;  
   int length_= strlen(input_string);
-  struct _Person_* person;
+  int number_of_parsed_persons = 0;
+  struct _LineBuffer_* person_string_buffer;
+  char* begin_of_person_string;
+  int status = initializeLineBuffer(&person_string_buffer, false);
+  if(status != NORMAL)
+  {
+    printError(OUT_OF_MEMORY);
+    return MEMORY_EXCEPTION;
+  }
 
-  for(index = 0; index < length_; index++){
+  for(index = 0; index < length_; index++)
+  {
     if(input_string[index] == '\"')
     {
       in_parenthesis = !in_parenthesis;
       if(in_parenthesis && entries_made < num_people)
       {
-        char* position_in_string = input_string + index + 1;
-        int status = initializePerson(&person);
-        if(status != NORMAL)
-        {
-          return status;
-        }
-        status = parsePerson(&(position_in_string), person);
-        if(status != NORMAL)
-        {
-          return status;
-        }
-        status = addPersonToList(&person, peopleList);
-        if(status != NORMAL)
-        {
-          return status;
-        }
+        begin_of_person_string = input_string + index + 1;
       }
-      if(!in_parenthesis){
-        input_string[index] = '\0';
+      if(!in_parenthesis)
+      {
+        addLineToLineBuffer(person_string_buffer, begin_of_person_string);
+        if(status != NORMAL)
+        {
+          return status;
+        }
+        number_of_parsed_persons++;
+        if(number_of_parsed_persons >= num_people)
+        {
+          break;
+        }
       }
     }
   }
 
-  if(in_parenthesis)
+  if(in_parenthesis || number_of_parsed_persons < num_people)
   {
-    //reached end of string while in parenthesis
+    freeLineBuffer(&person_string_buffer);
     return ERROR;
+  }
+
+  char* person1_position = person_string_buffer->data_[0];
+  char* person2_position;
+  if(num_people == 2)
+  {
+    person2_position = person_string_buffer->data_[1];
+  }
+  freeLineBuffer(&person_string_buffer);
+
+  struct _Person_* person1;
+  struct _Person_* person2;
+  
+  status = initializePerson(&person1);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+  status = parsePerson(&person1_position, person1);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+  status = addPersonToList(&person1, people_list);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+
+  if(num_people == 2)
+  {
+    status = initializePerson(&person2);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+    status = parsePerson(&person2_position, person2);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+    status = addPersonToList(&person2, people_list);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+    if(person1 == person2)
+    {
+      return ERROR;
+    }
+  }
+  
+  if(num_people == 1)
+  {
+    if(strstr(input_string, "  \"") != input_string || 
+       strstr(input_string, "\";") != person1_position)
+    {
+      return ERROR;
+    }
+  }
+  if(num_people == 2)
+  {
+    if(strstr(input_string, "  \"") != input_string || 
+       strstr(input_string, "\" -> \"") != person1_position || 
+       strstr(input_string, "\";") != person2_position)
+    {
+      return ERROR;
+    }
   }
   return NORMAL;
 }
 
-int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
+
+//----------------------------------------------------------------------------
+//
+//  Function that parses dot file and adds persons in it to the list of
+//  all persons
+//
+//  @param dot_inputfile_name -> name of the file
+//  
+//
+
+int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
+{
+  //open the dot file
   FILE* dot_file;
   int status = openDotFileForReading(&dot_file, dot_inputfile_name);
   if(status == ERROR)
   {
     printError(COULD_NOT_READ_FILE);
-    return ERROR;
+    return FILE_UNREADABLE_EXCEPTION;
   }
-
+  
+  //initialize lines and character buffer
   struct _LineBuffer_* lines;
   status = initializeLineBuffer(&lines, false);
   if(status != NORMAL)
@@ -1638,6 +2024,7 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
     return status;
   }
 
+  //read file into character buffer
   char input_char = '\0';
 
   while((input_char = fgetc(dot_file)) != EOF)
@@ -1647,6 +2034,7 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
 
   writeCharacterToCharacterBuffer(character_buffer, '\0');
 
+  //separate lines in character buffer and write them to lines buffer
   char* line_pointer = strtok(character_buffer->data_, "\n");
   if(line_pointer == NULL)
   {
@@ -1668,37 +2056,33 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
     }
   } 
 
+  //check overall integrity of dot file
   if(strcmp("digraph FamilyTree", lines->data_[0]) != 0)
   {
-    printf("line is %s\n", lines->data_[0]);
-    debug("digraph familytree did not match");
     printError(COULD_NOT_READ_FILE);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
   if(lines->data_[1][0] != '{')
   {
-    debug("{ in first line not found");
-    printf("line is %s\n", lines->data_[0]);
     printError(COULD_NOT_READ_FILE);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
   if(lines->data_[lines->position_ - 1][0] != '}')
   {
-    printf("line is [%s]\n", lines->data_[lines->position_ - 1]);
-    debug("} in last line not found");
     printError(COULD_NOT_READ_FILE);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
+  //parse each line of data in the dot file
   int line = 0;
   for(line=2; line < lines->position_ - 1; line++)
   {
-
-    printf("%s\n", lines->data_[line]);
-    if(strstr(lines->data_[line], "->") != NULL)
+    if(strstr(lines->data_[line], " -> ") != NULL)
     {
+      //parse two persons from the file in this if
+      //create a person list to store persons
       struct _PersonList_* input_persons;
       status = initializePersonList(&input_persons, true);
       if(status == ERROR)
@@ -1706,13 +2090,18 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
         return status;
       }
 
+      //parse line
       status = parsePersonsFromInputFileLine(lines->data_[line], input_persons, 2);
-      if(status == ERROR)
+      if(status != NORMAL)
       {
-        printError(COULD_NOT_READ_FILE);
+        if(status == ERROR)
+        {
+          printError(COULD_NOT_READ_FILE);
+        }
         return FILE_UNREADABLE_EXCEPTION;
       }
-      
+     
+      //initialize two persons and copy the persons from dot file into them
       struct _Person_* person1;
       status = initializePerson(&person1);
       if(status != NORMAL)
@@ -1720,7 +2109,17 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
         return status;
       }
 
-      copyPersonIntoAnotherPerson(person1, input_persons->list_[0]);
+      status = copyPersonIntoAnotherPerson(person1, input_persons->list_[0]);
+      if(status != NORMAL)
+      {
+        return status;
+      }
+
+      status = addPersonToList(&person1, all_persons);
+      if(status != NORMAL)
+      {
+        return status;
+      }
 
       struct _Person_* person2;
       status = initializePerson(&person2);
@@ -1729,46 +2128,59 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
         return status;
       }
 
-      copyPersonIntoAnotherPerson(person2, input_persons->list_[1]);
-
-
-      status = addPersonToList(&person1, all_persons);
+      status = copyPersonIntoAnotherPerson(person2, input_persons->list_[1]);
       if(status != NORMAL)
       {
         return status;
       }
+
       status = addPersonToList(&person2, all_persons);
       if(status != NORMAL)
       {
         return status;
       }
 
-      printf("person1 gender: %d, person2 gender: %d\n", person1->gender_, person2->gender_);
+      //determine their relationship
       if(person2->gender_ == MALE)
       {
-        person1->father_ = person2;
-        printf("added father [%s] to person [%s]\n", person2->name_, person1->name_);
-        if(strcmp(person1->name_, "Arcturus ") == 0)
+        if(person1->father_ != NULL)
         {
-          printf("mother and father of Arcturus are %p %p\n", person2->mother_, person2->father_);
+          printError(COULD_NOT_READ_FILE);
+          return FILE_UNREADABLE_EXCEPTION;
         }
+        person1->father_ = person2;
       }
       else
       {
+        if(person1->father_ != NULL)
+        {
+          printError(COULD_NOT_READ_FILE);
+          return FILE_UNREADABLE_EXCEPTION;
+        }
         person1->mother_ = person2;
-        printf("added mother %s to person %s\n", person2->name_, person1->name_);
       }
+
+      //detect if any circles are created by adding them
+      if(detectCircles(person1))
+      {
+        printError(COULD_NOT_READ_FILE);
+        return FILE_UNREADABLE_EXCEPTION;
+      }
+
       freePersonList(&input_persons);
     }
     else
     {
+      //parse one person from file
+      //initialize person list
       struct _PersonList_* input_persons;
       status = initializePersonList(&input_persons, true);
       if(status == ERROR)
       {
         return status;
       }
-
+        
+      //parse persons from input file line
       int status = parsePersonsFromInputFileLine(lines->data_[line], input_persons, 1);
       if(status == ERROR)
       {
@@ -1776,6 +2188,7 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
         return FILE_UNREADABLE_EXCEPTION;
       }
 
+      //initialize one person
       struct _Person_* person1;
       status = initializePerson(&person1);
       if(status != NORMAL)
@@ -1783,7 +2196,14 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
         return status;
       }
 
-      copyPersonIntoAnotherPerson(person1, input_persons->list_[0]);
+      //copy person from line into person1
+      status = copyPersonIntoAnotherPerson(person1, input_persons->list_[0]);
+      if(status != NORMAL)
+      {
+        return status;
+      }
+
+      //add the person to the list
       status = addPersonToList(&person1, all_persons);
       if(status != NORMAL)
       {
@@ -1795,15 +2215,19 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons){
 
   listAllPersons(NULL, all_persons);
   printf(SUCCESSFULLY_READ_FILE);
+  fclose(dot_file);
   freeLineBuffer(&lines);
   freeCharacterBuffer(&character_buffer);
   return NORMAL;
 }
+
 //-----------------------------------------------------------------------------
 //
 // Function that displays command prompt to user and reads user input.
 //
-// @param command_buffer buffer to write input to
+// @param command_buffer -> buffer to write input to
+// @param command -> pointer into command buffer to the start of command
+// @param arguments -> pointer into command buffer to start of arguments
 //
 // @return void 
 //
@@ -1820,7 +2244,6 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
   input_character = getchar();
   while(input_character != '\n')
   {
-    //printf("%c", input_character);
     input_buffer[input_buffer_position] = input_character;
     input_buffer_position++;
     if(input_buffer_position >= input_buffer_length_)
@@ -1845,7 +2268,8 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
 
   position_in_command_buffer += strlen(*command) + 1;
   
-  if(*command_buffer + total_length_of_command_buffer > position_in_command_buffer){
+  if(*command_buffer + total_length_of_command_buffer > position_in_command_buffer)
+  {
     *arguments = *command_buffer + strlen(*command) + 1;
   }
 }
@@ -1892,7 +2316,7 @@ int main(int argc, char *argv[])
   char* command;
   char* arguments;
 
-  while(return_status >= 0)
+  while(return_status <= 0)
   {
     command = NULL;
     arguments = NULL;
