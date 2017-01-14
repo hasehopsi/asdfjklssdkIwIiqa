@@ -1548,7 +1548,7 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
     return ERROR;
   }
  
-  bool people_are_related;
+  bool people_are_related = false;
   status = checkAncestorListsOfPersonsForMatches(existing_person1, existing_person2, &people_are_related);
   if(status != NORMAL)
   {
