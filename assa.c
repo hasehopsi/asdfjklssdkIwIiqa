@@ -20,7 +20,7 @@
 #define OUT_OF_MEMORY "[ERR] Out of memory.\n"
 #define COULD_NOT_READ_FILE "[ERR] Could not read file.\n"
 #define SUCCESSFULLY_READ_FILE "File parsing successful...\n"
-#define USAGE_EXCEPTION "Usage: ./ass [file-name_]\n"
+#define USAGE_EXCEPTION "Usage: ./ass [file-name]\n"
 
 //add command
 #define ADD_PERSONS_USAGE "[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].\n"
@@ -201,7 +201,7 @@ int skipWhitespace(char** string)
 
 int stripWhitespace(char* string)
 {
-  int index = 0;
+  unsigned int index = 0;
   while(isspace(string[0]))
   {
     for(index = 0; index < strlen(string); index++)
@@ -885,6 +885,74 @@ int createAncestorList(struct _Person_* person, struct _PersonList_* person_list
   return NORMAL;
 }
 
+//----------------------------------------------------------------------------
+//
+//  Function that compares the ancestor lists of two persons in search for
+//  matches
+//
+//  @param person1 -> first person to check
+//  @param person2 -> second person to check
+//  
+//  @return NORMAL, if everything worked, MEMORY_EXCEPTION on failure to 
+//  allocate memory
+//
+
+int checkAncestorListsOfPersonsForMatches(struct _Person_* person1, struct _Person_* person2, bool* people_are_related)
+{
+  //create ancestor lists of both persons
+  struct _PersonList_* ancestors_of_person1;
+  int status = initializePersonList(&ancestors_of_person1, false);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+  
+  struct _PersonList_* ancestors_of_person2;
+  status = initializePersonList(&ancestors_of_person2, false);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+
+  status = createAncestorList(person1, ancestors_of_person1);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+
+  status = createAncestorList(person2, ancestors_of_person2);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+
+  //compare every entry of both lists with every entry of other list
+
+  int index_ancestors1 = 0;
+  int index_ancestors2 = 0;
+
+  for(index_ancestors1 = 0; index_ancestors1 < ancestors_of_person1->length_; index_ancestors1++)
+  {
+    for(index_ancestors2 = 0; index_ancestors2 < ancestors_of_person2->length_; index_ancestors2++)
+    {
+      if(ancestors_of_person1->list_[index_ancestors1] == ancestors_of_person2->list_[index_ancestors2])
+      {
+        *people_are_related = true;
+        break;
+      }
+    }
+    if(*people_are_related)
+    {
+      break;
+    }
+  }
+
+  freePersonList(&ancestors_of_person1);
+  freePersonList(&ancestors_of_person2);
+
+  return status;
+}
+
 
 //----------------------------------------------------------------------------
 //
@@ -947,6 +1015,256 @@ bool detectCircles(struct _Person_* person_to_check)
     return_value = detectCirclesRecursiveSearch(person_to_check, person_to_check->mother_);
   }
   return return_value == 1 ? true : false;
+}
+
+
+//----------------------------------------------------------------------------
+//
+//  Function that Maps relation identifiers passed to the add function by the
+//  user to an enum that is used internally.
+//
+//  @param relation_input -> the relation string passed by the user 
+//  @param relation -> variable to store relation enum in
+//
+//  @return ERROR, if relation_input is not known, NORMAL otherwise
+//
+
+int mapRelationToRelationInput(char* relation_input, enum _Relations_* relation)
+{
+  if(strcmp(relation_input, "mother") == 0)
+  {
+    *relation = RELATION_MOTHER;
+  }
+  else if(strcmp(relation_input, "father") == 0)
+  {
+    *relation = RELATION_FATHER;
+  }
+  else if(strcmp(relation_input, "mgm") == 0)
+  {
+    *relation = RELATION_MOTHER_GRANDMOTHER;
+  }
+  else if(strcmp(relation_input, "fgm") == 0)
+  {
+    *relation = RELATION_FATHER_GRANDMOTHER; 
+  } 
+  else if(strcmp(relation_input, "mgf") == 0)
+  {
+    *relation = RELATION_MOTHER_GRANDFATHER;
+  }
+  else if(strcmp(relation_input, "fgf") == 0)
+  {
+    *relation = RELATION_FATHER_GRANDFATHER;
+  }
+  else
+  {
+    return ERROR;
+  }
+  return NORMAL;
+}
+
+//----------------------------------------------------------------------------
+//
+//  Function that creates compliant relationships between persons in 
+//  a person list (no circles and question marks are replaced)
+//
+//  @param Person -> the Person struct that should be free'd 
+//
+
+int addRelationshipToPersons(struct _Person_* person1, struct _Person_* person2, 
+    struct _PersonList_* all_persons, int* question_mark_person_counter, 
+    enum _Relations_ relation)
+{
+  struct _Person_** parent;
+  struct _Person_** grandparent;
+  int status = NORMAL;
+
+  if(relation == RELATION_FATHER || relation == RELATION_MOTHER)
+  {
+    if(relation == RELATION_MOTHER)
+    {
+      parent = &(person2->mother_);
+    }
+    else
+    {
+      parent = &(person2->father_);
+    }
+
+    if(*parent == NULL)
+    {
+      *parent = person1;
+    }
+    else if((*parent)->name_[0] == '?' &&
+        (*parent)->mother_ == person1->mother_ &&
+        (*parent)->father_ == person1->father_)
+    {
+      status = copyPersonIntoAnotherPerson(*parent, person1);
+      if(status != NORMAL)
+      {
+        return status;
+      }
+      removePersonFromPersonList(all_persons, person1);
+    }
+    else
+    {
+      return ERROR;
+    }
+    if(detectCircles(person1))
+    {
+      //delete all relations
+      *parent = NULL;
+      return ERROR;
+    }
+  }
+  else
+  {
+
+    if(relation == RELATION_MOTHER_GRANDMOTHER || 
+        relation == RELATION_MOTHER_GRANDFATHER)
+    {
+      parent = &(person2->mother_);
+    }
+    else
+    {
+      parent = &(person2->father_);
+    }
+
+    if(*parent == NULL)
+    {
+      struct _Person_* question_mark;
+      status = createQuestionMarkPerson(question_mark_person_counter, &question_mark);
+      if(status != NORMAL)
+      {
+        return status; 
+      }
+      status = addPersonToList(&question_mark, all_persons);
+      if(status != NORMAL)
+      {
+        return status;
+      }
+      *parent = question_mark;
+    }
+
+    if(relation == RELATION_MOTHER_GRANDMOTHER || relation == RELATION_FATHER_GRANDMOTHER)
+    {
+      grandparent = &((*parent)->mother_);
+    }
+    else
+    {
+      grandparent = &((*parent)->father_);
+    }
+
+    if(*grandparent == NULL)
+    {
+      *grandparent = person1;
+    }
+    else if((*grandparent)->name_[0] == '?' &&
+        (*grandparent)->mother_ == person1->mother_ &&
+        (*grandparent)->father_ == person1->father_)
+    {
+      //grandparent is a question mark person, but we can replace it
+      status = copyPersonIntoAnotherPerson(*grandparent, person1);
+      if(status != NORMAL)
+      {
+        return status;
+      }
+      removePersonFromPersonList(all_persons, person1);
+    }
+    else
+    {
+      //grandparent is already defined and is no matching question mark
+      return ERROR;
+    }
+    if(detectCircles(person1))
+    {
+      //delete all relations
+      if((*parent)->name_[0] == '?')
+      {
+        //having a single question mark without relation would not make sense
+        removePersonFromPersonList(all_persons, *parent);
+      }
+      *parent = NULL;
+      *grandparent = NULL;
+      return ERROR;
+    }
+  }
+  return NORMAL;
+}
+
+//----------------------------------------------------------------------------
+//
+//  Function that returns the relationship between two persons
+//
+//  @param person1 -> person to start searching from
+//  @param person2 -> person that is father mother grandmother etc. of person1
+//  
+//  @return string that holds relationship identifier 
+//
+
+enum _Relationship_ getRelationshipBetweenPeople(struct _Person_* person1, struct _Person_* person2)
+{
+  enum _Relationship_ relationship = NO_RELATION;
+
+  if(person1->gender_ == MALE)
+  {
+    if((person1->father_!= NULL && person2->father_ != NULL &&
+          person1->father_ == person2->father_) ||
+        (person1->mother_ != NULL && person2->mother_ != NULL &&
+         person1->mother_ == person2->mother_))
+    {
+      relationship = BROTHER;
+    }
+    else if(person2->father_ != NULL && person2->father_ == person1)
+    {
+      relationship = FATHER; 
+    } 
+    else if((person2->father_ != NULL && person2->father_->father_ != NULL &&
+            person2->father_->father_ == person1->father_) ||
+            (person2->father_ != NULL && person2->father_->mother_ != NULL &&
+            person2->father_->mother_ == person1->mother_) || 
+           (person2->mother_ != NULL && person2->mother_->father_ != NULL &&
+            person2->mother_->father_ == person1->father_) ||
+           (person2->mother_ != NULL && person2->mother_->mother_ != NULL &&
+            person2->mother_->mother_ == person1->mother_))
+    {
+      relationship = UNCLE;
+    }
+    else if((person2->mother_ != NULL && person2->mother_->father_ == person1) ||
+            (person2->father_ != NULL && person2->father_->father_ == person1))
+    {
+      relationship = GRANDFATHER;  
+    }
+  }
+  else
+  {
+    if((person1->father_!= NULL && person2->father_ != NULL &&
+          person1->father_ == person2->father_) ||
+        (person1->mother_ != NULL && person2->mother_ != NULL &&
+         person1->mother_ == person2->mother_))
+    {
+      relationship = SISTER;
+    }
+    else if(person2->mother_ != NULL && person2->mother_ == person1)
+    {
+      relationship = MOTHER;
+    }
+    else if((person2->father_ != NULL && person2->father_->father_ != NULL &&
+            person2->father_->father_ == person1->father_) ||
+            (person2->father_ != NULL && person2->father_->mother_ != NULL &&
+            person2->father_->mother_ == person1->mother_) || 
+           (person2->mother_ != NULL && person2->mother_->father_ != NULL &&
+            person2->mother_->father_ == person1->father_) ||
+           (person2->mother_ != NULL && person2->mother_->mother_ != NULL &&
+            person2->mother_->mother_ == person1->mother_))
+    {
+      relationship = AUNT;
+    }
+    else if((person2->mother_ != NULL && person2->mother_->mother_ == person1) ||
+            (person2->father_ != NULL && person2->father_->mother_ == person1))
+    {
+      relationship = GRANDMOTHER;  
+    }
+  }
+  return relationship;
 }
 
 
@@ -1040,45 +1358,21 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
   }
   
   enum _Relations_ relation;
-
-  if(strcmp(relation_input, "mother") == 0)
-  {
-    relation = RELATION_MOTHER;
-  }
-  else if(strcmp(relation_input, "father") == 0)
-  {
-    relation = RELATION_FATHER;
-  }
-  else if(strcmp(relation_input, "mgm") == 0)
-  {
-    relation = RELATION_MOTHER_GRANDMOTHER;
-  }
-  else if(strcmp(relation_input, "fgm") == 0)
-  {
-    relation = RELATION_FATHER_GRANDMOTHER; 
-  } 
-  else if(strcmp(relation_input, "mgf") == 0)
-  {
-    relation = RELATION_MOTHER_GRANDFATHER;
-  }
-  else if(strcmp(relation_input, "fgf") == 0)
-  {
-    relation = RELATION_FATHER_GRANDFATHER;
-  }
-  else
+  status = mapRelationToRelationInput(relation_input, &relation);
+  if(status != NORMAL)
   {
     freePerson(&person1);
     freePerson(&person2);
     printError(ADD_PERSONS_USAGE);
-    return ERROR;
+    return status;
   }
 
   if(((relation == RELATION_MOTHER ||
      relation == RELATION_MOTHER_GRANDMOTHER ||
-     relation == RELATION_MOTHER_GRANDMOTHER) &&
+     relation == RELATION_FATHER_GRANDMOTHER) &&
      person1->gender_ == MALE) ||
      ((relation == RELATION_FATHER ||
-     relation == RELATION_FATHER_GRANDFATHER ||
+     relation == RELATION_MOTHER_GRANDFATHER ||
      relation == RELATION_FATHER_GRANDFATHER) &&
      person1->gender_ == FEMALE))
   {
@@ -1109,121 +1403,64 @@ int addPersonsWithRelationCommand(char* console_input, struct _PersonList_* all_
     return status;
   } 
 
-  struct _Person_** parent;
-  struct _Person_** grandparent;
-
-  if(relation == RELATION_FATHER || relation == RELATION_MOTHER)
+  status = addRelationshipToPersons(person1, person2, all_persons,
+      question_mark_person_counter, relation);
+  if(status != NORMAL)
   {
-    if(relation == RELATION_MOTHER)
-    {
-      parent = &(person2->mother_);
-    } else
-    {
-      parent = &(person2->father_);
-    }
-
-    if(*parent == NULL)
-    {
-      *parent = person1;
-    }
-    else if((*parent)->name_[0] == '?' &&
-        (*parent)->mother_ == person1->mother_ &&
-        (*parent)->father_ == person1->father_)
-    {
-      status = copyPersonIntoAnotherPerson(*parent, person1);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-      removePersonFromPersonList(all_persons, person1);
-    }
-    else
+    if(status == ERROR)
     {
       printError(ADD_RELATION_NOT_POSSIBLE);
-      return ERROR;
     }
-    if(detectCircles(person1))
-    {
-      //delete all relations
-      *parent = NULL;
-      printError(ADD_RELATION_NOT_POSSIBLE);
-      return ERROR;
-    }
-  }
-  else
-  {
-
-    if(relation == RELATION_MOTHER_GRANDMOTHER || relation == RELATION_MOTHER_GRANDFATHER)
-    {
-      parent = &(person2->mother_);
-    }
-    else
-    {
-      parent = &(person2->father_);
-    }
-
-    if(*parent == NULL)
-    {
-      struct _Person_* question_mark;
-      status = createQuestionMarkPerson(question_mark_person_counter, &question_mark);
-      if(status != NORMAL)
-      {
-        return status; 
-      }
-      status = addPersonToList(&question_mark, all_persons);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-      *parent = question_mark;
-    }
-
-    if(relation == RELATION_MOTHER_GRANDMOTHER || relation == RELATION_FATHER_GRANDMOTHER)
-    {
-      grandparent = &((*parent)->mother_);
-    }
-    else
-    {
-      grandparent = &((*parent)->father_);
-    }
-
-    if(*grandparent == NULL)
-    {
-      *grandparent = person1;
-    }
-    else if((*grandparent)->name_[0] == '?' &&
-        (*grandparent)->mother_ == person1->mother_ &&
-        (*grandparent)->father_ == person1->father_)
-    {
-      //grandparent is a question mark person, but we can replace it
-      status = copyPersonIntoAnotherPerson(*grandparent, person1);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-      removePersonFromPersonList(all_persons, person1);
-    }
-    else
-    {
-      //grandparent is already defined and is no matching question mark
-      printError(ADD_RELATION_NOT_POSSIBLE);
-      return ERROR;
-    }
-    if(detectCircles(person1))
-    {
-      //delete all relations
-      if((*parent)->name_[0] == '?')
-      {
-        //having a single question mark without relation would not make sense
-        removePersonFromPersonList(all_persons, *parent);
-      }
-      *parent = NULL;
-      *grandparent = NULL;
-      printError(ADD_RELATION_NOT_POSSIBLE);
-      return ERROR;
-    }
+    return status;
   }
   return NORMAL;
+}
+
+//----------------------------------------------------------------------------
+//
+//  Function that returns a relationship string used by relationship command
+//
+//  @param relationship -> relationship to get identifier for 
+//  
+//  @return string that holds relationship identifier 
+//
+
+char* getRelationshipIdentifier(enum _Relationship_ relationship)
+{
+  char* identifier;
+
+  switch(relationship)
+  {
+    case SISTER:
+      identifier = "sister";
+      break;
+    case BROTHER:
+      identifier = "brother";
+      break;
+    case MOTHER:
+      identifier = "mother";
+      break;
+    case FATHER:
+      identifier = "father";
+      break;
+    case AUNT:
+      identifier = "aunt";
+      break;
+    case UNCLE:
+      identifier = "uncle";
+      break;
+    case GRANDMOTHER:
+      identifier = "grandmother";
+      break;
+    case GRANDFATHER:
+      identifier = "grandfather";
+      break;
+    default:
+      identifier = "undefined";
+      break;
+  }
+
+  return identifier;
 }
 
 //----------------------------------------------------------------------------
@@ -1310,54 +1547,12 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
     printError(RELATIONSHIP_BOTH_PEOPLE_ARE_SAME);
     return ERROR;
   }
-  
-  //create ancestor lists of both persons
-  struct _PersonList_* ancestors_of_person1;
-  status = initializePersonList(&ancestors_of_person1, false);
+ 
+  bool people_are_related;
+  status = checkAncestorListsOfPersonsForMatches(existing_person1, existing_person2, &people_are_related);
   if(status != NORMAL)
   {
     return status;
-  }
-  
-  struct _PersonList_* ancestors_of_person2;
-  status = initializePersonList(&ancestors_of_person2, false);
-  if(status != NORMAL)
-  {
-    return status;
-  }
-
-  status = createAncestorList(existing_person1, ancestors_of_person1);
-  if(status != NORMAL)
-  {
-    return status;
-  }
-
-  status = createAncestorList(existing_person2, ancestors_of_person2);
-  if(status != NORMAL)
-  {
-    return status;
-  }
-
-  //compare every entry of both lists with every entry of other list
-
-  int index_ancestors1 = 0;
-  int index_ancestors2 = 0;
-
-  bool people_are_related = false;
-  for(index_ancestors1 = 0; index_ancestors1 < ancestors_of_person1->length_; index_ancestors1++)
-  {
-    for(index_ancestors2 = 0; index_ancestors2 < ancestors_of_person2->length_; index_ancestors2++)
-    {
-      if(ancestors_of_person1->list_[index_ancestors1] == ancestors_of_person2->list_[index_ancestors2])
-      {
-        people_are_related = true;
-        break;
-      }
-    }
-    if(people_are_related)
-    {
-      break;
-    }
   }
 
   if(people_are_related)
@@ -1369,106 +1564,11 @@ int checkIfPeopleAreRelated(char* console_input, struct _PersonList_* all_person
     printf("%s", RELATIONSHIP_NO_RELATIONSHIP); 
   }
 
-  freePersonList(&ancestors_of_person1);
-  freePersonList(&ancestors_of_person2);
-
-  enum _Relationship_ relationship = NO_RELATION;
-
-  if(existing_person1->gender_ == MALE)
-  {
-    if(existing_person1->father_!= NULL && existing_person1->mother_!= NULL &&
-       existing_person2->father_!= NULL && existing_person2->mother_!= NULL &&
-      existing_person1->father_ == existing_person2->father_ &&
-      existing_person1->mother_ == existing_person2->mother_)
-    {
-      relationship = BROTHER;
-    }
-    else if(existing_person2->father_ != NULL && existing_person2->father_ == existing_person1)
-    {
-      relationship = FATHER; 
-    } 
-    else if(((existing_person2->father_ != NULL && existing_person2->father_->father_ != NULL &&
-            existing_person2->father_->mother_ != NULL &&
-            existing_person2->father_->father_ == existing_person1->father_ &&
-            existing_person2->father_->mother_ == existing_person1->mother_) ||
-           (existing_person2->mother_ != NULL && existing_person2->mother_->father_ != NULL &&
-            existing_person2->mother_->mother_ != NULL &&
-            existing_person2->mother_->father_ == existing_person1->father_ &&
-            existing_person2->mother_->mother_ == existing_person1->mother_)))
-    {
-      relationship = UNCLE;
-    }
-    else if((existing_person2->mother_ != NULL && existing_person2->mother_->father_ == existing_person1) ||
-            (existing_person2->father_ != NULL && existing_person2->father_->father_ == existing_person1))
-    {
-      relationship = GRANDFATHER;  
-    }
-  }
-  else
-  {
-    if(existing_person1->father_!= NULL && existing_person1->mother_!= NULL &&
-       existing_person2->father_!= NULL && existing_person2->mother_!= NULL &&
-      existing_person1->father_ == existing_person2->father_ &&
-      existing_person1->mother_ == existing_person2->mother_)
-    {
-      relationship = SISTER;
-    }
-    else if(existing_person2->mother_ != NULL && existing_person2->mother_ == existing_person1)
-    {
-      relationship = MOTHER;
-    }
-    else if(((existing_person2->father_ != NULL && existing_person2->father_->father_ != NULL &&
-            existing_person2->father_->mother_ != NULL &&
-            existing_person2->father_->father_ == existing_person1->father_ &&
-            existing_person2->father_->mother_ == existing_person1->mother_) ||
-           (existing_person2->mother_ != NULL && existing_person2->mother_->father_ != NULL &&
-            existing_person2->mother_->mother_ != NULL &&
-            existing_person2->mother_->father_ == existing_person1->father_ &&
-            existing_person2->mother_->mother_ == existing_person1->mother_)))
-    {
-      relationship = AUNT;
-    }
-    else if((existing_person2->mother_ != NULL && existing_person2->mother_->mother_ == existing_person1) ||
-            (existing_person2->father_ != NULL && existing_person2->father_->mother_ == existing_person1))
-    {
-      relationship = GRANDMOTHER;  
-    }
-  }
-
-  char* identifier = NULL;
-
-  switch(relationship)
-  {
-    case SISTER:
-      identifier = "sister";
-      break;
-    case BROTHER:
-      identifier = "brother";
-      break;
-    case MOTHER:
-      identifier = "mother";
-      break;
-    case FATHER:
-      identifier = "father";
-      break;
-    case AUNT:
-      identifier = "aunt";
-      break;
-    case UNCLE:
-      identifier = "uncle";
-      break;
-    case GRANDMOTHER:
-      identifier = "grandmother";
-      break;
-    case GRANDFATHER:
-      identifier = "grandfather";
-      break;
-    default:
-      break;
-  }
+  enum _Relationship_ relationship = getRelationshipBetweenPeople(existing_person1, existing_person2);
   
   if(relationship != NO_RELATION)
   {
+    char* identifier = getRelationshipIdentifier(relationship);
     char gender_person1 = existing_person1->gender_ == MALE ? 'm' : 'f';
     char gender_person2 = existing_person2->gender_ == MALE ? 'm' : 'f';
     printf("%s [%c] is the %s of %s [%c].\n", existing_person1->name_, gender_person1, identifier, existing_person2->name_, gender_person2);
@@ -1663,7 +1763,6 @@ int openDotFileForWriting(FILE** file_pointer, char* filename)
 
   if(*file_pointer == NULL)
   {
-    printError(DRAW_ALL_COULD_NOT_WRITE_FILE); 
     return ERROR;
   }
   return NORMAL;
@@ -1711,7 +1810,7 @@ int drawAllPersonsToFile(char* arguments, struct _PersonList_* all_persons)
   {
     if(status == ERROR)
     {
-      printError(DRAW_COULD_NOT_WRITE_FILE); 
+      printError(DRAW_ALL_COULD_NOT_WRITE_FILE); 
     }
     return status;
   } 
@@ -1851,6 +1950,7 @@ int drawPersonsFromRootToFile(char* arguments, struct _PersonList_* all_persons)
   
   printf("%s", DRAW_SUCCESS);
   freeLineBuffer(&lines_buffer);
+  freePersonList(&ancestor_list);
   fclose(output_file);
   return NORMAL;
 }
@@ -1991,18 +2091,22 @@ int parsePersonsFromInputFileLine(char* input_string, struct _PersonList_* peopl
 
 //----------------------------------------------------------------------------
 //
-//  Function that parses dot file and adds persons in it to the list of
-//  all persons
+//  Function that extracts the lines of a file and stores them in a line
+//  buffer
 //
-//  @param dot_inputfile_name -> name of the file
+//  @param filename -> filename of the file from which lines should be 
+//  extracted
+//  @param lines -> struct that contains lines of file, when function
+//  finishes
 //  
+//  @return NORMAL if everything worked, MEMORY_EXCEPTION on failure to
+//  allocate memory
 //
 
-int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
+int parseLinesFromFile(char *filename, struct _LineBuffer_** lines, struct _CharacterBuffer_** character_buffer)
 {
-  //open the dot file
   FILE* dot_file;
-  int status = openDotFileForReading(&dot_file, dot_inputfile_name);
+  int status = openDotFileForReading(&dot_file, filename);
   if(status == ERROR)
   {
     printError(COULD_NOT_READ_FILE);
@@ -2010,15 +2114,13 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
   }
   
   //initialize lines and character buffer
-  struct _LineBuffer_* lines;
-  status = initializeLineBuffer(&lines, false);
+  status = initializeLineBuffer(lines, false);
   if(status != NORMAL)
   {
     return status;
   }
 
-  struct _CharacterBuffer_* character_buffer;
-  status = initializeCharacterBuffer(&character_buffer);
+  status = initializeCharacterBuffer(character_buffer);
   if(status != NORMAL)
   {
     return status;
@@ -2029,19 +2131,20 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
 
   while((input_char = fgetc(dot_file)) != EOF)
   {
-    writeCharacterToCharacterBuffer(character_buffer, input_char);
+    writeCharacterToCharacterBuffer(*character_buffer, input_char);
   }
 
-  writeCharacterToCharacterBuffer(character_buffer, '\0');
+  writeCharacterToCharacterBuffer(*character_buffer, '\0');
 
   //separate lines in character buffer and write them to lines buffer
-  char* line_pointer = strtok(character_buffer->data_, "\n");
+  char* line_pointer = strtok((*character_buffer)->data_, "\n");
   if(line_pointer == NULL)
   {
     printError(COULD_NOT_READ_FILE);
+    return FILE_UNREADABLE_EXCEPTION;
   } 
 
-  status = addLineToLineBuffer(lines, line_pointer);
+  status = addLineToLineBuffer(*lines, line_pointer);
   if(status != NORMAL)
   {
     return status;
@@ -2049,29 +2152,189 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
 
   while((line_pointer = strtok(NULL, "\n")) != NULL)
   {
-    status = addLineToLineBuffer(lines, line_pointer);
+    status = addLineToLineBuffer(*lines, line_pointer);
     if(status != NORMAL)
     {
       return status;
     }
   } 
 
+  fclose(dot_file);
+
+  return status;
+}
+
+//----------------------------------------------------------------------------
+//
+//  Function that parses persons from a line of a dot file and adds them to 
+//  a person list
+//
+//  @param line -> line to parse persons from 
+//  
+//  @return FILE_UNREADABLE_EXCEPTION on failure to interpretate line,
+//  MEMORY_EXCEPTION on allocation failure, otherwise NORMAL
+//
+
+int parseDotFileLine(char* line, struct _PersonList_* all_persons)
+{
+  if(strstr(line, " -> ") != NULL)
+  {
+    //parse two persons from the file in this if
+    //create a person list to store persons
+    struct _PersonList_* input_persons;
+    int status = initializePersonList(&input_persons, true);
+    if(status == ERROR)
+    {
+      return status;
+    }
+
+    //parse line
+    status = parsePersonsFromInputFileLine(line, input_persons, 2);
+    if(status != NORMAL)
+    {
+      return FILE_UNREADABLE_EXCEPTION;
+    }
+   
+    //initialize two persons and copy the persons from dot file into them
+    struct _Person_* person1;
+    status = initializePerson(&person1);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+
+    status = copyPersonIntoAnotherPerson(person1, input_persons->list_[0]);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+
+    status = addPersonToList(&person1, all_persons);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+
+    struct _Person_* person2;
+    status = initializePerson(&person2);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+
+    status = copyPersonIntoAnotherPerson(person2, input_persons->list_[1]);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+
+    status = addPersonToList(&person2, all_persons);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+
+    //determine their relationship
+    if(person2->gender_ == MALE)
+    {
+      if(person1->father_ != NULL)
+      {
+        return FILE_UNREADABLE_EXCEPTION;
+      }
+      person1->father_ = person2;
+    }
+    else
+    {
+      if(person1->father_ != NULL)
+      {
+        return FILE_UNREADABLE_EXCEPTION;
+      }
+      person1->mother_ = person2;
+    }
+
+    //detect if any circles are created by adding them
+    if(detectCircles(person1))
+    {
+      return FILE_UNREADABLE_EXCEPTION;
+    }
+
+    freePersonList(&input_persons);
+  }
+  else
+  {
+    //parse one person from file
+    //initialize person list
+    struct _PersonList_* input_persons;
+    int status = initializePersonList(&input_persons, true);
+    if(status == ERROR)
+    {
+      return status;
+    }
+      
+    //parse persons from input file line
+    status = parsePersonsFromInputFileLine(line, input_persons, 1);
+    if(status == ERROR)
+    {
+      return FILE_UNREADABLE_EXCEPTION;
+    }
+
+    //initialize one person
+    struct _Person_* person1;
+    status = initializePerson(&person1);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+
+    //copy person from line into person1
+    status = copyPersonIntoAnotherPerson(person1, input_persons->list_[0]);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+
+    //add the person to the list
+    status = addPersonToList(&person1, all_persons);
+    if(status != NORMAL)
+    {
+      return status;
+    }
+    freePersonList(&input_persons);
+  }
+  return NORMAL;
+}
+
+//----------------------------------------------------------------------------
+//
+//  Function that parses dot file and adds persons in it to the list of
+//  all persons
+//
+//  @param dot_inputfile_name -> name of the file
+//  
+//
+
+int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
+{
+  struct _CharacterBuffer_* character_buffer = NULL;
+  struct _LineBuffer_* lines = NULL;
+  int status = parseLinesFromFile(dot_inputfile_name, &lines, &character_buffer);
+  if(status != NORMAL)
+  {
+    return status;
+  }
   //check overall integrity of dot file
   if(strcmp("digraph FamilyTree", lines->data_[0]) != 0)
   {
-    printError(COULD_NOT_READ_FILE);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
   if(lines->data_[1][0] != '{')
   {
-    printError(COULD_NOT_READ_FILE);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
   if(lines->data_[lines->position_ - 1][0] != '}')
   {
-    printError(COULD_NOT_READ_FILE);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
@@ -2079,143 +2342,16 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
   int line = 0;
   for(line=2; line < lines->position_ - 1; line++)
   {
-    if(strstr(lines->data_[line], " -> ") != NULL)
+    char* currentLine = lines->data_[line];
+    status = parseDotFileLine(currentLine, all_persons);
+    if(status != NORMAL)
     {
-      //parse two persons from the file in this if
-      //create a person list to store persons
-      struct _PersonList_* input_persons;
-      status = initializePersonList(&input_persons, true);
-      if(status == ERROR)
-      {
-        return status;
-      }
-
-      //parse line
-      status = parsePersonsFromInputFileLine(lines->data_[line], input_persons, 2);
-      if(status != NORMAL)
-      {
-        if(status == ERROR)
-        {
-          printError(COULD_NOT_READ_FILE);
-        }
-        return FILE_UNREADABLE_EXCEPTION;
-      }
-     
-      //initialize two persons and copy the persons from dot file into them
-      struct _Person_* person1;
-      status = initializePerson(&person1);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-
-      status = copyPersonIntoAnotherPerson(person1, input_persons->list_[0]);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-
-      status = addPersonToList(&person1, all_persons);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-
-      struct _Person_* person2;
-      status = initializePerson(&person2);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-
-      status = copyPersonIntoAnotherPerson(person2, input_persons->list_[1]);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-
-      status = addPersonToList(&person2, all_persons);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-
-      //determine their relationship
-      if(person2->gender_ == MALE)
-      {
-        if(person1->father_ != NULL)
-        {
-          printError(COULD_NOT_READ_FILE);
-          return FILE_UNREADABLE_EXCEPTION;
-        }
-        person1->father_ = person2;
-      }
-      else
-      {
-        if(person1->father_ != NULL)
-        {
-          printError(COULD_NOT_READ_FILE);
-          return FILE_UNREADABLE_EXCEPTION;
-        }
-        person1->mother_ = person2;
-      }
-
-      //detect if any circles are created by adding them
-      if(detectCircles(person1))
-      {
-        printError(COULD_NOT_READ_FILE);
-        return FILE_UNREADABLE_EXCEPTION;
-      }
-
-      freePersonList(&input_persons);
-    }
-    else
-    {
-      //parse one person from file
-      //initialize person list
-      struct _PersonList_* input_persons;
-      status = initializePersonList(&input_persons, true);
-      if(status == ERROR)
-      {
-        return status;
-      }
-        
-      //parse persons from input file line
-      int status = parsePersonsFromInputFileLine(lines->data_[line], input_persons, 1);
-      if(status == ERROR)
-      {
-        printError(COULD_NOT_READ_FILE);
-        return FILE_UNREADABLE_EXCEPTION;
-      }
-
-      //initialize one person
-      struct _Person_* person1;
-      status = initializePerson(&person1);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-
-      //copy person from line into person1
-      status = copyPersonIntoAnotherPerson(person1, input_persons->list_[0]);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-
-      //add the person to the list
-      status = addPersonToList(&person1, all_persons);
-      if(status != NORMAL)
-      {
-        return status;
-      }
-      freePersonList(&input_persons);
+      return status;
     }
   }
 
   listAllPersons(NULL, all_persons);
   printf(SUCCESSFULLY_READ_FILE);
-  fclose(dot_file);
   freeLineBuffer(&lines);
   freeCharacterBuffer(&character_buffer);
   return NORMAL;
