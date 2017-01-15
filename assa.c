@@ -1327,29 +1327,15 @@ enum _Relationship_ getRelationshipBetweenPeople(struct _Person_* person1,
 
 //----------------------------------------------------------------------------
 //
-//  Function that implements the add command. It parses the arguments that
-//  have the form <person1> relationship <person2> and adds the persons and 
-//  their relationship the the PersonList all_persons if the relationship 
-//  between them is valid. Prints Errors to the console on failure.
+//  Function that handles the console input for the add command
 //
-//  @param console_input -> string of arguments that comes from the user 
-//  @param all_persons -> PersonList struct that contains the tree to 
-//  which the new persons should be added.
-//  @param question_mark_person -> integer that tracks how many question
-//  mark persons have been added yet
-//
-//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR on failure
-//  to successfully add persons, NORMAL on success
+//  @param console_input -> input line from the console
 //
 
-int addPersonsWithRelationCommand(char* console_input,
-    struct _PersonList_* all_persons, int* question_mark_person_counter)
+int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
+    struct _Person_** person2, enum _Relations_* relation)
 {
-  struct _Person_* person1 = malloc(sizeof(struct _Person_));
-  person1->name_ = NULL;
-  struct _Person_* person2 = malloc(sizeof(struct _Person_));
-  person2->name_ = NULL;
-  int status = NORMAL; 
+  int status = NORMAL;
   char* position = console_input;
   char* relation_input = NULL;
 
@@ -1361,7 +1347,7 @@ int addPersonsWithRelationCommand(char* console_input,
   //parse first person
   if(status == NORMAL)
   {
-    status = parsePerson(&position, &person1);
+    status = parsePerson(&position, person1);
   }
 
   //skip whitespace in string
@@ -1393,8 +1379,55 @@ int addPersonsWithRelationCommand(char* console_input,
   //parse second person
   if(status == NORMAL)
   {
-    status = parsePerson(&position, &person2);
+    status = parsePerson(&position, person2);
   }
+  
+  if(status == NORMAL)
+  {
+     status = mapRelationToRelationInput(relation_input, relation);
+  }
+
+  return status;
+}
+
+//----------------------------------------------------------------------------
+//
+//  Function that implements the add command. It parses the arguments that
+//  have the form <person1> relationship <person2> and adds the persons and 
+//  their relationship the the PersonList all_persons if the relationship 
+//  between them is valid. Prints Errors to the console on failure.
+//
+//  @param console_input -> string of arguments that comes from the user 
+//  @param all_persons -> PersonList struct that contains the tree to 
+//  which the new persons should be added.
+//  @param question_mark_person -> integer that tracks how many question
+//  mark persons have been added yet
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR on failure
+//  to successfully add persons, NORMAL on success
+//
+
+int addPersonsWithRelationCommand(char* console_input,
+    struct _PersonList_* all_persons, int* question_mark_person_counter)
+{
+  
+  struct _Person_* person1; 
+  int status = initializePerson(&person1);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+  struct _Person_* person2; 
+  status = initializePerson(&person2);
+  if(status != NORMAL)
+  {
+    return status;
+  }
+
+  enum _Relations_ relation;
+
+  status = parseAddCommandConsoleInput(console_input, &person1, &person2,
+      &relation);
 
   if(status != NORMAL)
   {
@@ -1407,15 +1440,6 @@ int addPersonsWithRelationCommand(char* console_input,
     return status;
   }
   
-  enum _Relations_ relation;
-  status = mapRelationToRelationInput(relation_input, &relation);
-  if(status != NORMAL)
-  {
-    freePerson(&person1);
-    freePerson(&person2);
-    printError(ADD_PERSONS_USAGE);
-    return status;
-  }
 
   if(((relation == RELATION_MOTHER ||
      relation == RELATION_MOTHER_GRANDMOTHER ||
