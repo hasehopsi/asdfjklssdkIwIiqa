@@ -1330,6 +1330,9 @@ enum _Relationship_ getRelationshipBetweenPeople(struct _Person_* person1,
 //  Function that handles the console input for the add command
 //
 //  @param console_input -> input line from the console
+//  @param person1 -> storage slot for the first person
+//  @param person2 -> storage slot for the second person
+//  @param relation -> storage slot for the relation between the persons
 //
 
 int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
@@ -1537,6 +1540,36 @@ char* getRelationshipIdentifier(enum _Relationship_ relationship)
   return identifier;
 }
 
+int parseRelationCommandConsoleInput(char* console_input,
+    struct _Person_** person1, struct _Person_** person2)
+{
+  int status = NORMAL;
+
+  char* position = console_input;
+  if(console_input == NULL)
+  {
+    status = ERROR;
+  }
+  
+  if(status == NORMAL)
+  {
+    status = parsePerson(&position, person1);
+  }
+
+  if(status == NORMAL)
+  {
+    status = parsePerson(&position, person2);
+  }
+
+  skipWhitespace(&position);
+
+  if(position[0] != '\0')
+  {
+    status = ERROR;
+  }
+  return NORMAL;
+}
+
 //----------------------------------------------------------------------------
 //
 //  Function that implements the relation command. Checks if two people
@@ -1566,28 +1599,7 @@ int checkIfPeopleAreRelated(char* console_input,
     return status;
   }
 
-  char* position = console_input;
-  if(console_input == NULL)
-  {
-    status = ERROR;
-  }
-  
-  if(status == NORMAL)
-  {
-    status = parsePerson(&position, &person1);
-  }
-
-  if(status == NORMAL)
-  {
-    status = parsePerson(&position, &person2);
-  }
-
-  skipWhitespace(&position);
-
-  if(position[0] != '\0')
-  {
-    status = ERROR;
-  }
+  status = parseRelationCommandConsoleInput(console_input, &person1, &person2);
 
   if(status != NORMAL)
   {
