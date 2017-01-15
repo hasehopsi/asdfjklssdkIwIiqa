@@ -178,9 +178,16 @@ void printError(char* error)
 //
 //  @param string -> the string in which whitespace should be skipped.
 //
+//  @return NORMAL if characters were skipped, and no NULL bytes were
+//  encountered, ERROR otherwise
+//
 
 int skipWhitespace(char** string)
 {
+  if((*string)[0] != '\0')
+  {
+    return ERROR; 
+  }
   while((*string)[0] == ' ')
   {
     (*string)++;
@@ -202,7 +209,7 @@ int skipWhitespace(char** string)
 //  @param string -> string to strip Whitespace from
 //
 
-int stripWhitespace(char* string)
+void stripWhitespace(char* string)
 {
   unsigned int index = 0;
   while(isspace(string[0]))
@@ -218,7 +225,6 @@ int stripWhitespace(char* string)
     string[index] = '\0';
     index--;
   }
-  return NORMAL;
 }
 
 
@@ -1576,7 +1582,7 @@ int parseRelationCommandConsoleInput(char* console_input,
   {
     status = ERROR;
   }
-  return NORMAL;
+  return status;
 }
 
 //----------------------------------------------------------------------------
