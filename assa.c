@@ -387,15 +387,18 @@ int initializeLineBuffer(struct _LineBuffer_** buffer, bool allocate_data)
 void freeLineBuffer(struct _LineBuffer_** buffer)
 {
   int index = 0;
-  if((*buffer)->data_is_allocated_)
+  if((*buffer) != NULL)
   {
-    for(index = 0; index < (*buffer)->position_; index++)
+    if((*buffer)->data_is_allocated_)
     {
-      free((*buffer)->data_[index]);
+      for(index = 0; index < (*buffer)->position_; index++)
+      {
+        free((*buffer)->data_[index]);
+      }
     }
+    free((*buffer)->data_);
+    free(*buffer);
   }
-  free((*buffer)->data_);
-  free(*buffer);
   *buffer = NULL;
 }
 
@@ -468,8 +471,11 @@ int initializeCharacterBuffer(struct _CharacterBuffer_** buffer)
 
 void freeCharacterBuffer(struct _CharacterBuffer_** buffer)
 {
-  free((*buffer)->data_);
-  free(*buffer);
+  if(*buffer != NULL)
+  {
+    free((*buffer)->data_);
+    free(*buffer);
+  }
   *buffer = NULL;
 }
 
@@ -731,16 +737,19 @@ int initializePersonList(struct _PersonList_** person_list,
 
 void freePersonList(struct _PersonList_** person_list)
 {
-  int index = 0;
-  if((*person_list)->data_is_allocated_)
+  if(*person_list != NULL)
   {
-    for(index = 0; index < (*person_list)->length_; index++)
+    int index = 0;
+    if((*person_list)->data_is_allocated_)
     {
-      freePerson(&((*person_list)->list_[index]));
+      for(index = 0; index < (*person_list)->length_; index++)
+      {
+        freePerson(&((*person_list)->list_[index]));
+      }
     }
+    free((*person_list)->list_);
+    free(*person_list);
   }
-  free((*person_list)->list_);
-  free(*person_list);
   *person_list = NULL;
 }
 
