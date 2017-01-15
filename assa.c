@@ -1575,6 +1575,11 @@ int parseRelationCommandConsoleInput(char* console_input,
 
   if(status == NORMAL)
   {
+    status = skipWhitespace(&position);
+  }
+
+  if(status == NORMAL)
+  {
     status = parsePerson(&position, person2);
   }
 
