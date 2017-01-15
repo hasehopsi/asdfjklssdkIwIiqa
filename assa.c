@@ -763,7 +763,8 @@ void freePersonList(struct _PersonList_** person_list)
 //
 
 int addPersonToList(struct _Person_** input_person,
-    struct _PersonList_* person_list)
+    struct _PersonList_* person_list,
+    bool delete_input_person_if_exists)
 {
   int index = 0;
   bool person_already_exists = false;
@@ -793,8 +794,11 @@ int addPersonToList(struct _Person_** input_person,
   }
   else
   {
-    //if new_person already exists -> delete input person
-    freePerson(input_person);
+    if(delete_input_person_if_exists)
+    {
+      //if new_person already exists -> delete input person
+      freePerson(input_person);
+    }
     *input_person = existing_person;
   }
   return NORMAL; 
@@ -907,7 +911,7 @@ int createAncestorList(struct _Person_* person,
       return status;
     }
   }
-  status = addPersonToList(&person, person_list);
+  status = addPersonToList(&person, person_list, false);
   if(status != NORMAL)
   {
     return status;
@@ -1182,7 +1186,7 @@ int addRelationshipToPersons(struct _Person_* person1,
       {
         return status; 
       }
-      status = addPersonToList(&question_mark, all_persons);
+      status = addPersonToList(&question_mark, all_persons, true);
       if(status != NORMAL)
       {
         return status;
@@ -1438,12 +1442,12 @@ int addPersonsWithRelationCommand(char* console_input,
     return ERROR;
   }
   
-  status = addPersonToList(&person1, all_persons);
+  status = addPersonToList(&person1, all_persons, true);
   if(status != NORMAL)
   {
     return status;
   }
-  status = addPersonToList(&person2, all_persons);
+  status = addPersonToList(&person2, all_persons, true);
   if(status != NORMAL)
   {
     return status;
@@ -2058,7 +2062,7 @@ int parsePersonsFromPersonPointers(char* input_string,
   {
     return status;
   }
-  status = addPersonToList(&person1, people_list);
+  status = addPersonToList(&person1, people_list, true);
   if(status != NORMAL)
   {
     return status;
@@ -2076,7 +2080,7 @@ int parsePersonsFromPersonPointers(char* input_string,
     {
       return status;
     }
-    status = addPersonToList(&person2, people_list);
+    status = addPersonToList(&person2, people_list, true);
     if(status != NORMAL)
     {
       return status;
@@ -2310,7 +2314,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
       return status;
     }
 
-    status = addPersonToList(&person1, all_persons);
+    status = addPersonToList(&person1, all_persons, true);
     if(status != NORMAL)
     {
       return status;
@@ -2329,7 +2333,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
       return status;
     }
 
-    status = addPersonToList(&person2, all_persons);
+    status = addPersonToList(&person2, all_persons, true);
     if(status != NORMAL)
     {
       return status;
@@ -2396,7 +2400,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
     }
 
     //add the person to the list
-    status = addPersonToList(&person1, all_persons);
+    status = addPersonToList(&person1, all_persons, true);
     if(status != NORMAL)
     {
       return status;
