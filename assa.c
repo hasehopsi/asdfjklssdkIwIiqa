@@ -1670,6 +1670,13 @@ int checkIfPeopleAreRelated(char* console_input,
   enum _Relationship_ relationship =
     getRelationshipBetweenPeople(existing_person1, existing_person2);
   
+  if(relationship == NO_RELATION)
+  {
+    //try if relation exists the other way around :)
+    relationship = getRelationshipBetweenPeople(existing_person2, 
+        existing_person1);
+  }
+
   if(relationship != NO_RELATION)
   {
     char* identifier = getRelationshipIdentifier(relationship);
