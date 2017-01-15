@@ -2480,6 +2480,13 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
 
 int main(int argc, char *argv[])
 {
+
+  if(argc > 2)
+  {
+    printError(USAGE_EXCEPTION);
+    return WRONG_USAGE_EXCEPTION;
+  }
+
   int question_mark_person_counter = 1;
 
   struct _PersonList_* all_persons;
@@ -2497,11 +2504,6 @@ int main(int argc, char *argv[])
     {
       return return_status;
     }
-  }
-  if(argc > 2)
-  {
-    printError(USAGE_EXCEPTION);
-    return WRONG_USAGE_EXCEPTION;
   }
 
   char* command_buffer = NULL;
