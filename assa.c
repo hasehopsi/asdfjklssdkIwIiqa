@@ -1937,6 +1937,7 @@ int drawPersonsFromRootToFile(char* arguments,
   {
     if(status == ERROR)
     {
+      freePerson(&person);
       printError(DRAW_USAGE);
     }
     return status;
