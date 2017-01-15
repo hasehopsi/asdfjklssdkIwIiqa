@@ -1101,7 +1101,7 @@ int mapRelationToRelationInput(char* relation_input,
 //
 
 int addRelationshipToPersons(struct _Person_* person1,
-    struct _Person_* person2, 
+    struct _Person_* person2,
     struct _PersonList_* all_persons, int* question_mark_person_counter, 
     enum _Relations_ relation)
 {
@@ -1927,7 +1927,7 @@ int drawPersonsFromRootToFile(char* arguments,
   if(input_filename == NULL ||
       input_filename + strlen(input_filename) != last_char_of_arguments)
   {
-    free(person);
+    freePerson(&person);
     printError(DRAW_USAGE);
     return ERROR;
   }
