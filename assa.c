@@ -1349,20 +1349,17 @@ int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
   char* end_of_input = console_input + strlen(console_input);
   char* relation_input = NULL;
 
-  printf("%d\n", status);
   if(console_input == NULL)
   {
     status = ERROR;  
   }
 
-  printf("%d\n", status);
   //parse first person
   if(status == NORMAL)
   {
     status = parsePerson(&position, person1);
   }
 
-  printf("before skipWhitespace %d\n", status);
   //skip whitespace in string
   if(status == NORMAL)
   {
@@ -1370,7 +1367,6 @@ int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
   }
 
 
-  printf("after skipWhitespace %d\n", status);
   //parse relation
   if(status == NORMAL)
   {
@@ -1393,7 +1389,6 @@ int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
     }
   }
 
-  printf("%d [%s]\n", status, position);
   //skip whitespace in string
   if(status == NORMAL)
   {
@@ -1401,21 +1396,16 @@ int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
     skipWhitespace(&position);
   }
 
-  printf("%d\n", status);
-
   //parse second person
   if(status == NORMAL)
   {
     status = parsePerson(&position, person2);
   }
   
-  printf("%d\n", status);
   if(status == NORMAL)
   {
      status = mapRelationToRelationInput(relation_input, relation);
   }
-
-  printf("%d\n", status);
 
   return status;
 }
