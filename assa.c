@@ -1669,6 +1669,16 @@ int checkIfPeopleAreRelated(char* console_input,
 
   enum _Relationship_ relationship =
     getRelationshipBetweenPeople(existing_person1, existing_person2);
+
+  if(relationship != NO_RELATION)
+  {
+    char* identifier = getRelationshipIdentifier(relationship);
+    char gender_person1 = existing_person1->gender_ == MALE ? 'm' : 'f';
+    char gender_person2 = existing_person2->gender_ == MALE ? 'm' : 'f';
+    printf("%s [%c] is the %s of %s [%c].\n",
+        existing_person1->name_, gender_person1, identifier,
+        existing_person2->name_, gender_person2);
+  }
   
   if(relationship == NO_RELATION)
   {
@@ -1683,9 +1693,10 @@ int checkIfPeopleAreRelated(char* console_input,
     char gender_person1 = existing_person1->gender_ == MALE ? 'm' : 'f';
     char gender_person2 = existing_person2->gender_ == MALE ? 'm' : 'f';
     printf("%s [%c] is the %s of %s [%c].\n",
-        existing_person1->name_, gender_person1, identifier,
-        existing_person2->name_, gender_person2);
+        existing_person2->name_, gender_person2, identifier,
+        existing_person1->name_, gender_person1);
   }
+
   return NORMAL;
 }
 
