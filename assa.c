@@ -793,8 +793,8 @@ int addPersonToList(struct _Person_** input_person,
   }
   else
   {
-    //if new_person already exists -> delete it
-    freePerson(&new_person);
+    //if new_person already exists -> delete input person
+    freePerson(input_person);
     *input_person = existing_person;
   }
   return NORMAL; 
