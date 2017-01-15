@@ -1,4 +1,4 @@
-:add Sirius [f] father Sirius [m]
+add Sirius [f] father Sirius [m]
 add Steve [m] fgf Alex [m]
 add Steve [m] father mr x [m]
 relationship mr x [m] Alex [m]
@@ -17,5 +17,22 @@ draw inexistant [m] inexistant...
 draw mr x [m] error-file
 
 list
+list hello world
+
+add grandfather [m] fgf grandson [m]
+add grandfather [m] father father [m]
+add father [m] father grandson [m]
+relationship father [m] grandson [m]
+relationship grandfather [m] father [m]
+relationship grandfather [m] grandson [m]
+
+relationship Steve [m] grandfather [m]
+relationship hallo welt
+relationship Steve [m] inexistant [m]
+relationship Steve [m] Steve [m]
+
+list
+
+draw-all testcase-result
 
 quit
