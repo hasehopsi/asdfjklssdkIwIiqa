@@ -387,7 +387,7 @@ int initializeLineBuffer(struct _LineBuffer_** buffer, bool allocate_data)
 void freeLineBuffer(struct _LineBuffer_** buffer)
 {
   int index = 0;
-  if((*buffer) != NULL)
+  if(*buffer != NULL)
   {
     if((*buffer)->data_is_allocated_)
     {
