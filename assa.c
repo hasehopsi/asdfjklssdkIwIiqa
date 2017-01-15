@@ -2579,6 +2579,7 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
     input_character = getchar();
     if(input_character == EOF)
     {
+      printf("Input character was EOF! quitting...!\n");
       exit(0);
     }
   }
