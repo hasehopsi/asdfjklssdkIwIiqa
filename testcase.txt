@@ -31,6 +31,9 @@ relationship hallo welt
 relationship Steve [m] inexistant [m]
 relationship Steve [m] Steve [m]
 
+add Rosa [f] mgm Angela [f]
+draw-all tree
+
 list
 
 draw-all testcase-result

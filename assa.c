@@ -663,7 +663,7 @@ int copyPersonIntoAnotherPerson(struct _Person_* destination,
 //
 
 int createQuestionMarkPerson(int* question_mark_person_counter,
-    struct _Person_** person)
+    struct _Person_** person, enum _Gender_ question_mark_gender)
 {
   struct _Person_* question_mark_person;
   int status = initializePerson(&question_mark_person);
@@ -682,6 +682,7 @@ int createQuestionMarkPerson(int* question_mark_person_counter,
 
   snprintf(question_mark_person->name_, 10, "?%d",
       *question_mark_person_counter);
+  question_mark_person->gender_ = question_mark_gender;
   (*question_mark_person_counter)++;
   *person = question_mark_person;
   return NORMAL;
@@ -1149,21 +1150,24 @@ int addRelationshipToPersons(struct _Person_* person1,
   else
   {
 
+    enum _Gender_ question_mark_gender;
     if(relation == RELATION_MOTHER_GRANDMOTHER || 
         relation == RELATION_MOTHER_GRANDFATHER)
     {
       parent = &(person2->mother_);
+      question_mark_gender = FEMALE;
     }
     else
     {
       parent = &(person2->father_);
+      question_mark_gender = MALE;
     }
 
     if(*parent == NULL)
     {
       struct _Person_* question_mark;
       status = createQuestionMarkPerson(question_mark_person_counter,
-          &question_mark);
+          &question_mark, question_mark_gender);
       if(status != NORMAL)
       {
         return status; 
