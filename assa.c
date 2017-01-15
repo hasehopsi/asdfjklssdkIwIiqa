@@ -1351,7 +1351,7 @@ int addPersonsWithRelationCommand(char* console_input,
   person2->name_ = NULL;
   int status = NORMAL; 
   char* position = console_input;
-  char* relation_input;
+  char* relation_input = NULL;
 
   if(console_input == NULL)
   {
