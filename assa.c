@@ -890,11 +890,7 @@ int getExistingPerson(struct _Person_* person_to_get,
 int createAncestorList(struct _Person_* person,
     struct _PersonList_* person_list)
 {
-  int status = addPersonToList(&person, person_list);
-  if(status != NORMAL)
-  {
-    return status;
-  }
+  int status = NORMAL;
   if(person->father_ != NULL)
   {
     status = createAncestorList(person->father_, person_list);
@@ -910,6 +906,11 @@ int createAncestorList(struct _Person_* person,
     {
       return status;
     }
+  }
+  status = addPersonToList(&person, person_list);
+  if(status != NORMAL)
+  {
+    return status;
   }
   return NORMAL;
 }
