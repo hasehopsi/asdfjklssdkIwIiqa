@@ -1,0 +1,2 @@
+Should return errorcode 3 and "Could not read file."
+../dot-files/missing_brace_at_end.dot

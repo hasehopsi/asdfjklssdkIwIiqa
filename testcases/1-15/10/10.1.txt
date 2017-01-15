@@ -1,0 +1,8 @@
+add franz [f] father susi [f]
+add eli [m] mother bernd [m]
+add franz [f] fgf susi [f]
+add eli [m] fgm bernd [m]
+add franz [f] mgf susi [f]
+add eli [m] mgm bernd [m]
+list
+

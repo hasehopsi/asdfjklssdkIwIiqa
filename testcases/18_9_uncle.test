@@ -1,0 +1,26 @@
+Should produce uncle 6 times
+add Peter [m] mgf Franz [m]
+add Peter [m] father Hans [m]
+relationship Franz [m] Hans [m]
+
+add Francesco [m] fgf Laudon [m]
+add Francesco [m] father Ramon [m]
+relationship Laudon [m] Ramon [m]
+
+add Luisa [f] mgm Laudon [m]
+add Luisa [f] mother Salmon [m]
+relationship Laudon [m] Salmon [m]
+
+add Lacroix [f] fgm Laudon [m]
+add Lacroix [f] mother Burrito [m]
+relationship Laudon [m] Burrito [m]
+
+add Humboldt [m] father Lars [m]
+add Susi [f] mother Humboldt [m]
+add Susi [f] mother Marius [m]
+relationship Lars [m] Marius [m]
+
+add Franzi [f] mother Lars [m]
+add Larissa [f] mother Franzi [f]
+add Larissa [f] mother Ramstein [m]
+relationship Lars [m] Ramstein [m]

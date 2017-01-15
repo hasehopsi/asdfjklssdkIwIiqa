@@ -1,0 +1,10 @@
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] Wrong usage - add <namePerson1> [m/f] <relation> <namePerson2> [m/f].
+[ERR] No entries available.

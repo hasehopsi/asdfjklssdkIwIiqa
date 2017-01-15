@@ -1,0 +1,19 @@
+The two people are related.
+Walburga [f] is the mother of Sirius Jr. [m].
+The two people are related.
+Phineas [m] is the father of Sirius [m].
+[ERR] At least one person does not exist yet.
+[ERR] Wrong usage - list.\n
+Arcturus [m]
+Cygnus [m]
+Hester [f]
+Irma [f]
+Melania [f]
+Orion [m]
+Phineas [m]
+Pollux [m]
+Sirius [m]
+Sirius Jr. [m]
+Ursula [f]
+Violetta [f]
+Walburga [f]

@@ -2493,6 +2493,10 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
           input_buffer_length_* sizeof(char));
     }
     input_character = getchar();
+    if(input_character == EOF)
+    {
+      exit(0);
+    }
   }
   input_buffer[input_buffer_position] = '\0';
   *command_buffer = input_buffer;
@@ -2578,12 +2582,6 @@ int main(int argc, char *argv[])
     if(strcmp(command, "quit") == 0)
     {
       printf(CLOSE_MESSAGE);
-      free(command_buffer);
-      return_status = NORMAL;
-      break;
-    }
-    else if(strcmp(command, "EOF") == 0)
-    {
       free(command_buffer);
       return_status = NORMAL;
       break;

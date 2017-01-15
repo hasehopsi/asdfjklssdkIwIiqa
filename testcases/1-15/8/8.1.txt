@@ -1,0 +1,11 @@
+add susi [f] mother angela [f]
+add franzi [f] mother angela [f]
+
+add franz [m] father sepp [m]
+add hugo [m] father sepp [m]
+
+add berni [m] fgf sepp [m]
+add julian [m] father franz [m]
+
+add elisabeth [f] mgm lisa [f]
+add franziska [f] mgm lisa [f]

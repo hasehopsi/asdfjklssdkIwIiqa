@@ -1,0 +1,9 @@
+Should produce first produce sister, then brother
+
+add Peter [m] mgf Franz [m]
+add Peter [m] mgf Markus [m]
+add Susi [f] mother Franz [m]
+add Susi [f] mother Marion [f]
+relationship Marion [f] Franz [m]
+relationship Franz [m] Marion [f]
+

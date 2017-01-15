@@ -1,0 +1,4 @@
+Should produce grandfather twice
+add Mark [m] fgf Franz [m]
+relationship Mark [m] Franz [m]
+relationship Franz [m] Mark [m]

@@ -1,0 +1,4 @@
+Should produce grandmother twice
+add Maria [f] fgm Franz [m]
+relationship Maria [f] Franz [m]
+relationship Franz [m] Maria [f]

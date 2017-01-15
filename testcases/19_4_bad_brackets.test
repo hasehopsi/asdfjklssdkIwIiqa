@@ -1,0 +1,8 @@
+Should produce Wrong Usage 6 times
+add Peter [m] father Franz [m]
+relationship Peter [[m] Franz [m]
+relationship Peter m] Franz [m]
+relationship Peter [m Franz [m]
+relationship Peter [m] Franz [m
+relationship Peter [m] Franz [[m
+relationship Peter[m] Franz[m]

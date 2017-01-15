@@ -1,0 +1,13 @@
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+[ERR] Wrong usage - draw-all <file-name>.
+Creating DOT-file was successful.

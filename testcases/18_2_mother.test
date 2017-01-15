@@ -1,0 +1,4 @@
+Should produce mother twice
+add Susi [f] mother Franz [m]
+relationship Susi [f] Franz [m]
+relationship Franz [m] Susi [f]

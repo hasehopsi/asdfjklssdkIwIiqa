@@ -1,0 +1,19 @@
+add Orion [m] father Sirius Jr. [m]
+add Walburga [f] mother Sirius Jr. [m]
+add Arcturus [m] fgf Sirius Jr. [m]
+add Melania [f] mother Orion [m]
+add Pollux [m] mgf Sirius Jr. [m]
+add Irma [f] mother Walburga [f]
+add Hester [f] mother Arcturus [m]
+add Sirius [m] fgf Orion [m]
+add Cygnus [m] father Pollux [m]
+add Violetta [f] fgm Walburga [f]
+add Ursula [f] mother Cygnus [m]
+add Ursula [f] mother Sirius [m]
+add Phineas [m] father Sirius [m]
+add Phineas [m] father Cygnus [m]
+
+draw Cygnus [m] fam-tree
+
+add Rosa [f] mgm Angela [f]
+draw Angela [f] fam-tree2

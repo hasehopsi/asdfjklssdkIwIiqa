@@ -1,0 +1,13 @@
+add Susi [f] mgm Sepp [m]
+add Sepp [m] father Susi [f]
+
+add Bernd [m] fgf Hugo [m]
+add Hugo [m] father Bernd [m]
+
+add Lisa [f] fgm Berni [m]
+add Berni [m] father Lisa [f]
+
+add Julian [m] mgf Horst [m]
+add Horst [m] father Julian [m]
+list
+

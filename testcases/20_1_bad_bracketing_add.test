@@ -1,0 +1,11 @@
+Should produce Wrong Usage 10 times
+add Peter [m father Franz [m]
+add Peter m] father Franz [m]
+add Susi [f] mother Franz m]
+add Susi [f] mother Franz [m
+add Susi f mother Franz m
+add Susi [f[ mother Franz [m]
+add Susi [[f] mother Franz [m]
+add Susi [f] mother Franz [m]]
+add Frank [[m]] father Franz [m]
+add Frank [m] father Franz [[m]]

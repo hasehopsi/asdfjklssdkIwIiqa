@@ -1,0 +1,8 @@
+Should read correctly and show different working relationships
+relationship Sirius [m] Cygnus [m]
+relationship Sirius Jr. [m] Orion [m]
+relationship Sirius Jr. [m] Ursula [f]
+relationship Walburga [f] Violetta [f]
+relationship Arcturus [m] Cygnus [m]
+relationship Melania [f] Arcturus [m]
+../dot-files/black-fam_tree.dot
