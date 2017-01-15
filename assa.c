@@ -1678,6 +1678,7 @@ int checkIfPeopleAreRelated(char* console_input,
     printf("%s [%c] is the %s of %s [%c].\n",
         existing_person1->name_, gender_person1, identifier,
         existing_person2->name_, gender_person2);
+    return NORMAL;
   }
   
   if(relationship == NO_RELATION)
