@@ -20,5 +20,5 @@ digraph FamilyTree
   "Violetta [f]";
   "Walburga [f]" -> "Irma [f]";
   "Walburga [f]" -> "Pollux [m]";
-  "Stefan [m]" -> "Stefan [f]";
 }
+
