@@ -1369,7 +1369,15 @@ int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
     }
     if(status == NORMAL)
     {
-      position += strlen(relation_input) + 1;
+      position += strlen(relation_input);
+      if(position[0] != '\0')
+      {
+        position += 1; 
+      }
+      else
+      {
+        status = ERROR;
+      }
     }
   }
 
@@ -1600,7 +1608,6 @@ int checkIfPeopleAreRelated(char* console_input,
   }
 
   status = parseRelationCommandConsoleInput(console_input, &person1, &person2);
-
   if(status != NORMAL)
   {
     if(status == ERROR)
