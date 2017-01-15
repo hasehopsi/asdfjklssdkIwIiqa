@@ -1,4 +1,4 @@
-add Sirius [f] father Sirius [m]
+:add Sirius [f] father Sirius [m]
 add Steve [m] fgf Alex [m]
 add Steve [m] father mr x [m]
 relationship mr x [m] Alex [m]

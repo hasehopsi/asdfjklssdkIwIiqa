@@ -2510,6 +2510,7 @@ int main(int argc, char *argv[])
 
     if(command == NULL)
     {
+      free(command_buffer);
       continue;
     }
 
