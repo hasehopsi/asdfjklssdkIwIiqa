@@ -1133,6 +1133,7 @@ int addRelationshipToPersons(struct _Person_* person1,
         return status;
       }
       removePersonFromPersonList(all_persons, person1);
+      person1 = *parent;
     }
     else
     {
@@ -1200,6 +1201,7 @@ int addRelationshipToPersons(struct _Person_* person1,
         return status;
       }
       removePersonFromPersonList(all_persons, person1);
+      person1 = *parent;
     }
     else
     {
