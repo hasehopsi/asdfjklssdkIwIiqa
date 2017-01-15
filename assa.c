@@ -2095,7 +2095,8 @@ int parsePersonsFromPersonPointers(char* input_string,
   if(num_people == 1)
   {
     if(strstr(input_string, "  \"") != input_string || 
-       strstr(input_string, "\";") != person1_position)
+       strstr(input_string, "\";") != person1_position ||
+       input_string + strlen(input_string) > person1_position + 2)
     {
       return ERROR;
     }
@@ -2104,7 +2105,8 @@ int parsePersonsFromPersonPointers(char* input_string,
   {
     if(strstr(input_string, "  \"") != input_string || 
        strstr(input_string, "\" -> \"") != person1_position || 
-       strstr(input_string, "\";") != person2_position)
+       strstr(input_string, "\";") != person2_position ||
+       input_string + strlen(input_string) > person2_position + 2)
     {
       return ERROR;
     }
