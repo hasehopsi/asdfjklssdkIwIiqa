@@ -2010,68 +2010,23 @@ int drawPersonsFromRootToFile(char* arguments,
 }
 
 
-
 //----------------------------------------------------------------------------
 //
-//  Function that parses a line from a dot_file. It extracts and initializes
-//  the persons in the line. It returns an error if both persons are the
-//  same person.
+//  Function that receives a string (from a dot file) and one or two pointers 
+//  into the string. It will check the integrity of the String and will 
+//  parse Persons from the specified positions in the string and add them to a
+//  Person_list.
 //
-//  @param input_string -> one line of the file that should be parsed
-//  @param peopleList -> struct to store persons in the line
-//  @param num_people -> number of people that should be in the line
-//
-//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR, if a 
-//  parsing error is encountered, or NORMAL on success
+//  @param person_string_buffer -> a list of pointers into
+//  @param person_list -> the list to which persons are added
+//  @param num_persons -> specifies the number of lines that are investigated
+//  for persons
 //
 
-int parsePersonsFromInputFileLine(char* input_string,
+int parsePersonsFromPersonPointers(char* input_string,
+    struct _LineBuffer_* person_string_buffer,
     struct _PersonList_* people_list, int num_people)
 {
-  int index = 0;
-  int entries_made = 0;
-  bool in_parenthesis = false;  
-  int length_ = strlen(input_string);
-  int number_of_parsed_persons = 0;
-  struct _LineBuffer_* person_string_buffer;
-  char* begin_of_person_string;
-  int status = initializeLineBuffer(&person_string_buffer, false);
-  if(status != NORMAL)
-  {
-    return MEMORY_EXCEPTION;
-  }
-
-  for(index = 0; index < length_; index++)
-  {
-    if(input_string[index] == '\"')
-    {
-      in_parenthesis = !in_parenthesis;
-      if(in_parenthesis && entries_made < num_people)
-      {
-        begin_of_person_string = input_string + index + 1;
-      }
-      if(!in_parenthesis)
-      {
-        addLineToLineBuffer(person_string_buffer, begin_of_person_string);
-        if(status != NORMAL)
-        {
-          return status;
-        }
-        number_of_parsed_persons++;
-        if(number_of_parsed_persons >= num_people)
-        {
-          break;
-        }
-      }
-    }
-  }
-
-  if(in_parenthesis || number_of_parsed_persons < num_people)
-  {
-    freeLineBuffer(&person_string_buffer);
-    return ERROR;
-  }
-
   char* person1_position = person_string_buffer->data_[0];
   char* person2_position;
   if(num_people == 2)
@@ -2083,7 +2038,7 @@ int parsePersonsFromInputFileLine(char* input_string,
   struct _Person_* person1;
   struct _Person_* person2;
   
-  status = initializePerson(&person1);
+  int status = initializePerson(&person1);
   if(status != NORMAL)
   {
     return status;
@@ -2138,6 +2093,87 @@ int parsePersonsFromInputFileLine(char* input_string,
     {
       return ERROR;
     }
+  }
+  return NORMAL;
+}
+
+//----------------------------------------------------------------------------
+//
+//  Function that parses a line from a dot_file. It extracts and initializes
+//  the persons in the line. It returns an error if both persons are the
+//  same person.
+//
+//  @param input_string -> one line of the file that should be parsed
+//  @param peopleList -> struct to store persons in the line
+//  @param num_people -> number of people that should be in the line
+//
+//  @return MEMORY_EXCEPTION on failure to allocate memory, ERROR, if a 
+//  parsing error is encountered, or NORMAL on success
+//
+
+int parsePersonsFromInputFileLine(char* input_string,
+    struct _PersonList_* people_list, int num_people,
+    int* question_mark_person_counter)
+{
+  int index = 0;
+  int entries_made = 0;
+  bool in_parenthesis = false;  
+  int length_ = strlen(input_string);
+  int number_of_parsed_persons = 0;
+  struct _LineBuffer_* person_string_buffer;
+  char* begin_of_person_string;
+  int status = initializeLineBuffer(&person_string_buffer, false);
+
+  if(status != NORMAL)
+  {
+    return MEMORY_EXCEPTION;
+  }
+
+  for(index = 0; index < length_; index++)
+  {
+    if(input_string[index] == '\"')
+    {
+      in_parenthesis = !in_parenthesis;
+      if(in_parenthesis && entries_made < num_people)
+      {
+        begin_of_person_string = input_string + index + 1;
+      }
+      if(!in_parenthesis)
+      {
+        addLineToLineBuffer(person_string_buffer, begin_of_person_string);
+        if(status != NORMAL)
+        {
+          return status;
+        }
+        number_of_parsed_persons++;
+        if(number_of_parsed_persons >= num_people)
+        {
+          break;
+        }
+      }
+    }
+    if(input_string[index] == '?')
+    {
+      int question_mark_id = 0;
+      sscanf(&(input_string[index]), "?%d", &question_mark_id);
+      if(question_mark_id >= *question_mark_person_counter)
+      {
+        *question_mark_person_counter = question_mark_id + 1; 
+      }
+    }
+  }
+
+  if(in_parenthesis || number_of_parsed_persons < num_people)
+  {
+    freeLineBuffer(&person_string_buffer);
+    return ERROR;
+  }
+  
+  status = parsePersonsFromPersonPointers(input_string, person_string_buffer, 
+      people_list, num_people);
+  if(status != NORMAL)
+  {
+    return status;
   }
   return NORMAL;
 }
@@ -2228,7 +2264,8 @@ int parseLinesFromFile(char *filename, struct _LineBuffer_** lines,
 //  MEMORY_EXCEPTION on allocation failure, otherwise NORMAL
 //
 
-int parseDotFileLine(char* line, struct _PersonList_* all_persons)
+int parseDotFileLine(char* line, struct _PersonList_* all_persons,
+    int* question_mark_person_counter)
 {
   if(strstr(line, " -> ") != NULL)
   {
@@ -2242,7 +2279,8 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons)
     }
 
     //parse line
-    status = parsePersonsFromInputFileLine(line, input_persons, 2);
+    status = parsePersonsFromInputFileLine(line, input_persons, 2, 
+        question_mark_person_counter);
     if(status != NORMAL)
     {
       return FILE_UNREADABLE_EXCEPTION;
@@ -2325,7 +2363,8 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons)
     }
       
     //parse persons from input file line
-    status = parsePersonsFromInputFileLine(line, input_persons, 1);
+    status = parsePersonsFromInputFileLine(line, input_persons, 1,
+        question_mark_person_counter);
     if(status == ERROR)
     {
       return FILE_UNREADABLE_EXCEPTION;
@@ -2366,7 +2405,8 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons)
 //  
 //
 
-int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
+int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons,
+    int* question_mark_person_counter)
 {
   struct _CharacterBuffer_* character_buffer = NULL;
   struct _LineBuffer_* lines = NULL;
@@ -2397,7 +2437,8 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons)
   for(line = 2; line < lines->position_ - 1; line++)
   {
     char* currentLine = lines->data_[line];
-    status = parseDotFileLine(currentLine, all_persons);
+    status = parseDotFileLine(currentLine, all_persons,
+        question_mark_person_counter);
     if(status != NORMAL)
     {
       return status;
@@ -2493,15 +2534,18 @@ int main(int argc, char *argv[])
   int return_status = initializePersonList(&all_persons, true);
   if(return_status != NORMAL)
   {
+    printError(OUT_OF_MEMORY);
     return return_status;
   }
 
   if(argc == 2)
   {
     char* dot_inputfile_name = argv[1]; 
-    return_status = parseDotFile(dot_inputfile_name, all_persons);
+    return_status = parseDotFile(dot_inputfile_name, all_persons,
+        &question_mark_person_counter);
     if(return_status != NORMAL)
     {
+      printError(COULD_NOT_READ_FILE);
       return return_status;
     }
   }
