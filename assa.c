@@ -1340,6 +1340,7 @@ int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
 {
   int status = NORMAL;
   char* position = console_input;
+  char* end_of_input = console_input + strlen(console_input);
   char* relation_input = NULL;
 
   if(console_input == NULL)
@@ -1370,7 +1371,7 @@ int parseAddCommandConsoleInput(char* console_input, struct _Person_** person1,
     if(status == NORMAL)
     {
       position += strlen(relation_input);
-      if(position[0] != '\0')
+      if(position < end_of_input)
       {
         position += 1; 
       }
