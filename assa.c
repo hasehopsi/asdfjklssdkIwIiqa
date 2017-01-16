@@ -2724,10 +2724,6 @@ int main(int argc, char *argv[])
   {
     printError(OUT_OF_MEMORY);
   }
-  if(return_status == FILE_UNREADABLE_EXCEPTION)
-  {
-    printError(COULD_NOT_READ_FILE);
-  }
 
   return return_status;
 }

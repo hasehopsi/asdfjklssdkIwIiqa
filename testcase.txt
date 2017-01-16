@@ -35,6 +35,13 @@ add Rosa [f] mgm Angela [f]
 draw-all tree
 
 
+add Peter [m] mgf Franz [m]
+add Peter [m] mgf Markus [m]
+add Peter [m] father Susi [f]
+add Susi [f] mother Franz [m]
+add Susi [f] mother Markus [m]
+draw-all Susi
+
 
 list
 
