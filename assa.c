@@ -1112,12 +1112,38 @@ int mapRelationToRelationInput(char* relation_input,
   return NORMAL;
 }
 
+
+//----------------------------------------------------------------------------
+//
+//  Function that changes all links to a person in a person list. Useful for
+//  correcting links when deleting a person
+//
+//  @param Person -> the Person struct that should be free'd 
+//
+
+void changeLinksInPersonList(struct _Person_* link_to_replace,
+    struct _Person_* replacement, struct _PersonList_* person_list)
+{
+  int index = 0;
+  for(index = 0; index < person_list->length_; index++)
+  {
+    if(person_list->list_[index]->father_ == link_to_replace) 
+    {
+      person_list->list_[index]->father_ = replacement;
+    }
+    if(person_list->list_[index]->mother_ == link_to_replace)
+    {
+      person_list->list_[index]->mother_ = replacement;
+    }
+  }
+}
+
 //----------------------------------------------------------------------------
 //
 //  Function that creates compliant relationships between persons in 
 //  a person list (no circles and question marks are replaced)
 //
-//  @param Person -> the Person struct that should be free'd 
+//  @param person1 ->
 //
 
 int addRelationshipToPersons(struct _Person_* person1,
@@ -1153,6 +1179,9 @@ int addRelationshipToPersons(struct _Person_* person1,
       {
         return status;
       }
+      //replace all links to person1 with links to *parent, as person1 will be
+      //deleted
+      changeLinksInPersonList(person1, *parent, all_persons);
       removePersonFromPersonList(all_persons, person1);
       person1 = *parent;
     }
@@ -1224,6 +1253,10 @@ int addRelationshipToPersons(struct _Person_* person1,
       {
         return status;
       }
+      
+      //replace all links to person1 with links to *parent, as person1 will be
+      //deleted
+      changeLinksInPersonList(person1, *parent, all_persons);
       removePersonFromPersonList(all_persons, person1);
       person1 = *parent;
     }
