@@ -2429,7 +2429,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
     }
     else
     {
-      if(person1->father_ != NULL)
+      if(person1->mother_ != NULL)
       {
         return FILE_UNREADABLE_EXCEPTION;
       }
@@ -2664,7 +2664,6 @@ int main(int argc, char *argv[])
     if(eof_encountered == true)
     {
       free(command_buffer);
-      printf("freed command buffer");
       return_status = NORMAL;
       break;
     }
