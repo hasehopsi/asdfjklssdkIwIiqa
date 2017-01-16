@@ -2512,16 +2512,22 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons,
   //check overall integrity of dot file
   if(strcmp("digraph FamilyTree", lines->data_[0]) != 0)
   {
+    freeLineBuffer(&lines);
+    freeCharacterBuffer(&character_buffer);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
   if(lines->data_[1][0] != '{')
   {
+    freeLineBuffer(&lines);
+    freeCharacterBuffer(&character_buffer);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
   if(lines->data_[lines->position_ - 1][0] != '}')
   {
+    freeLineBuffer(&lines);
+    freeCharacterBuffer(&character_buffer);
     return FILE_UNREADABLE_EXCEPTION;
   }
 
@@ -2534,6 +2540,8 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons,
         question_mark_person_counter);
     if(status != NORMAL)
     {
+      freeLineBuffer(&lines);
+      freeCharacterBuffer(&character_buffer);
       return status;
     }
   }
