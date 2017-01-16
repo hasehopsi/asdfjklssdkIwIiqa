@@ -1294,7 +1294,6 @@ int addRelationshipToPersons(struct _Person_* person1,
         //having a single question mark without relation would not make sense
         removePersonFromPersonList(all_persons, *parent);
       }
-      printf("grandparent is %p\n", *grandparent);
       *parent = NULL;
       return ERROR;
     }
