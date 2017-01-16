@@ -2581,6 +2581,7 @@ void commandPrompt(char** command_buffer, char** command, char** arguments,
     if(input_character == EOF)
     {
       *eof_encountered = true; 
+      *command_buffer = input_buffer;
       return;
     }
   }
