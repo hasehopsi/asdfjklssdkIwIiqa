@@ -1,0 +1,23 @@
+digraph FamilyTree
+{
+  "Arcturus [m]" -> "Hester [f]";
+  "Arcturus [m]" -> "Sirius [m]";
+  "Cygnus [m]" -> "Ursula [f]";
+  "Cygnus [m]" -> "Phineas [m]";
+  "Hester [f]";
+  "Irma [f]";
+  "Melania [f]";
+  "Orion [m]" -> "Melania [f]";
+  "Orion [m]" -> "Arcturus [m]";
+  "Phineas [m]";
+  "Pollux [m]" -> "Violetta [f]";
+  "Pollux [m]" -> "Cygnus [m]";
+  "Sirius [m]" -> "Ursula [f]";
+  "Sirius [m]" -> "Phineas [m]";
+  "Sirius Jr. [m]" -> "Walburga [f]";
+  "Sirius Jr. [m]" -> "Orion [m]";
+  "Ursula [f]";
+  "Violetta [f]";
+  "Walburga [f]" -> "Irma [f]";
+  "Walburga [f]" -> "Pollux [m]";
+}

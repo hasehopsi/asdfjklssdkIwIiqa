@@ -1,0 +1,40 @@
+add Peter [m] father Hans [m]
+add Peter [m] father Laus [m]
+add Peter [m] father Franz [m]
+add Susi [f] mother Laus [m]
+add Susi [f] mother Franz [m]
+add Mark [m] mgf Franz [m]
+add Mark [m] mgf Bruder [m]
+add Marion [f] mgm Franz [m]
+add Trabuk [m] fgf Franz [m]
+add Sibill [f] fgm Franz [m]
+
+relationship Peter [m] Franz [m]
+relationship Franz [m] Peter [m]
+
+relationship Susi [f] Franz [m]
+relationship Franz [m] Susi [f]
+
+relationship Mark [m] Franz [m]
+relationship Franz [m] Mark [m]
+
+relationship Marion [f] Franz [m]
+relationship Franz [m] Marion [f]
+
+relationship Trabuk [m] Franz [m]
+relationship Franz [m] Trabuk [m]
+
+relationship Sibill [f] Franz [m]
+relationship Franz [m] Sibill [f]
+
+relationship Banana [m] Franz [m]
+
+relationship Sibill [f] Marion [f]
+
+relationship Susi [f] Peter [m]
+relationship Bruder [m] Franz [m]
+relationship Hans [m] Franz [m]
+relationship Laus [m] Bruder [m]
+relationship Trabuk [m] Bruder [m]
+
+draw-all 18_dotfile

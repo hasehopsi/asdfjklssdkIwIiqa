@@ -1,0 +1,4 @@
+Should produce father twice
+add Peter [m] father Franz [m]
+relationship Peter [m] Franz [m]
+relationship Franz [m] Peter [m]

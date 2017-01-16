@@ -1,0 +1,34 @@
+Standard Testcase mit mehreren Adds, draw, list und relationship (hier falsche Reihenfolge adden, ohne wrong usage)
+
+add Sepp [m] fgf Frank [m]
+add Susanne [f] fgm Frank [m]
+add Herbert [m] mgf Frank [m]
+add Franziska [f] mgm Frank [m]
+list
+relationship Sepp [m] Frank [m]
+relationship Frank [m] Susanne [f]
+draw-all test121
+add Peter [m] father Frank [m]
+add Susi [f] mother Frank [m]
+add Peter [m] father Heidi [f]
+add Jaqueline [f] mother Heidi [f]
+add Sepp [m] father Hans [m]
+add Sepp [m] father Serrafine [f]
+relationship Peter [m] Frank [m]
+relationship Frank [m] Peter [m]
+relationship Susi [f] Frank [m]
+relationship Frank [m] Susi [f]
+relationship Susi [f] Peter [m]
+relationship Sepp [m] Frank [m]
+relationship Frank [m] Susanne [f]
+relationship Herbert [m] Frank [m]
+relationship Frank [m] Serrafine [f]
+relationship Hans [m] Frank [m]
+relationship Heidi [f] Frank [m]
+relationship Jaqueline [f] Heidi [f]
+relationship Heidi [f] Frank [m]
+relationship Susi [f] Heidi [f]
+draw-all test122
+draw Peter [m] test12peter
+draw Heidi [f] test12heidi
+draw Frank [m] test12frank

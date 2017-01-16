@@ -1,0 +1,10 @@
+add franz
+add franz [m]
+add franz [m] father
+add franz [m] father susi 
+add franz [m] father susi []
+add franz [m] father susi [g]
+add franz [m] faather susi [f]
+add father susi [f]
+add franz [m] [m] father susi [f]
+list

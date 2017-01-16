@@ -1,0 +1,4 @@
+add Esteban [m] fgf Schneewittchen [f]
+add Esteban [m] father Detlef [m]
+add Andreas [m] father Detlef [m]
+

@@ -1,0 +1,40 @@
+Frank [m]
+Franziska [f]
+Heidi [f]
+Herbert [m]
+Jaqueline [f]
+Peter [m]
+Sepp [m]
+Serrafine [f]
+Susanne [f]
+Susi [f]
+The two people are related.
+Peter [m] is the father of Frank [m].
+The two people are related.
+Peter [m] is the father of Frank [m].
+The two people are related.
+Susi [f] is the mother of Frank [m].
+The two people are related.
+Susi [f] is the mother of Frank [m].
+There is no relationship between them.
+The two people are related.
+Sepp [m] is the grandfather of Frank [m].
+The two people are related.
+Susanne [f] is the grandmother of Frank [m].
+The two people are related.
+Herbert [m] is the grandfather of Frank [m].
+The two people are related.
+Serrafine [f] is the aunt of Frank [m].
+The two people are related.
+Hans [m] is the uncle of Frank [m].
+The two people are related.
+Heidi [f] is the sister of Frank [m].
+The two people are related.
+Jaqueline [f] is the mother of Heidi [f].
+The two people are related.
+Frank [m] is the brother of Heidi [f].
+There is no relationship between them.
+Creating DOT-file was succesful.
+Creating DOT-file was succesful.
+Creating DOT-file was succesful.
+Creating DOT-file was succesful.

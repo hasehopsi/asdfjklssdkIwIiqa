@@ -1,0 +1,50 @@
+add Sirius [f] father Sirius [m]
+add Steve [m] fgf Alex [m]
+add Steve [m] father mr x [m]
+relationship mr x [m] Alex [m]
+add Steve [m] fat lel [m]    
+add Alex [m] father Steve [m]
+add Alex [m] father Alex [m]
+add Steve [m] fgf Alex [m]
+
+draw-all hello world
+draw-all error-file
+draw-all hello
+
+draw mr x [m] mrxtree
+draw mr x [m] hello world
+draw inexistant [m] inexistant...
+draw mr x [m] error-file
+
+list
+list hello world
+
+add grandfather [m] fgf grandson [m]
+add grandfather [m] father father [m]
+add father [m] father grandson [m]
+relationship father [m] grandson [m]
+relationship grandfather [m] father [m]
+relationship grandfather [m] grandson [m]
+
+relationship Steve [m] grandfather [m]
+relationship hallo welt
+relationship Steve [m] inexistant [m]
+relationship Steve [m] Steve [m]
+
+add Rosa [f] mgm Angela [f]
+draw-all tree
+
+
+add Peter [m] mgf Franz [m]
+add Peter [m] mgf Markus [m]
+add Peter [m] father Susi [f]
+add Susi [f] mother Franz [m]
+add Susi [f] mother Markus [m]
+draw-all Susi
+
+
+list
+
+draw-all testcase-result
+
+quit

@@ -1,0 +1,14 @@
+The two people are related.
+Walburga [f] is the mother of Sirius Jr. [m].
+The two people are related.
+Phineas [m] is the father of Sirius [m].
+[ERR] At least one person does not exist yet.
+The two people are related.
+Sirius [m] is the grandfather of Orion [m].
+There is no relationship between them.
+The two people are related.
+There is no relationship between them.
+The two people are related.
+The two people are related.
+The two people are related.
+The two people are related.

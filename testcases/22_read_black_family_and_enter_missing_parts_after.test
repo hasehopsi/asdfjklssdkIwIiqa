@@ -1,0 +1,7 @@
+Should not return any errors, should produce black family graph
+add Hester [f] mother Arcturus [m]
+add Melania [f] mother Orion [m]
+add Phineas [m] father Sirius [m]
+add Irma [f] mgm Sirius Jr. [m]
+draw-all 22_missing_black-fam_tree
+../dot-files/missing_black-fam_tree.dot

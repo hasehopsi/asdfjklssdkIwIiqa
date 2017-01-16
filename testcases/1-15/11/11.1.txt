@@ -1,0 +1,5 @@
+add susi [f] mother angela [f]
+add angela [f] mother susi [f]
+
+add peter [m] father hans [m]
+add hans [m] father peter [m]

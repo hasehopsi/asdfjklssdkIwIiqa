@@ -1,0 +1,32 @@
+Standard Testcase mit mehreren Adds, draw, list und relationship (hier in "Reihenfolge" adden, ohne jeglichen usage error)
+
+add Peter [m] father Frank [m]
+add Susi [f] mother Frank [m]
+add Sepp [m] father Peter [m]
+add Susanne [f] mother Peter [m]
+add Herbert [m] father Susi [f]
+add Franziska [f] mother Susi [f]
+add Peter [m] father Heidi [f]
+add Jaqueline [f] mother Heidi [f]
+add Sepp [m] father Hans [m]
+add Sepp [m] father Serrafine [f]
+list
+relationship Peter [m] Frank [m]
+relationship Frank [m] Peter [m]
+relationship Susi [f] Frank [m]
+relationship Frank [m] Susi [f]
+relationship Susi [f] Peter [m]
+relationship Sepp [m] Frank [m]
+relationship Frank [m] Susanne [f]
+relationship Herbert [m] Frank [m]
+relationship Frank [m] Serrafine [f]
+relationship Hans [m] Frank [m]
+relationship Heidi [f] Frank [m]
+relationship Jaqueline [f] Heidi [f]
+relationship Frank [m] Heidi [f]
+relationship Susi [f] Heidi [f]
+draw-all test11
+draw Peter [m] test11peter
+draw Heidi [f] test11heidi
+draw Frank [m] test11frank
+

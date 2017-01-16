@@ -1,0 +1,4 @@
+Should produce mgm twice
+add Maria [f] mgm Franz [m]
+relationship Maria [f] Franz [m]
+relationship Franz [m] Maria [f]

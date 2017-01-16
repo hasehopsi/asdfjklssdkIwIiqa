@@ -1,0 +1,30 @@
+add Sepp [m] father Susi[f]
+add Sepp [m]father Susi [f]
+add Sepp [m]father Susi[f]
+add Sepp [m]
+add Sepp [m] father Susi
+add Sepp [m] father Susi []
+add Sepp [m] father Susi [f
+add Sepp [m] father Susi f]
+add Sepp [m] father Susi [g] 
+add Sepp [m] father Susi [[]
+add Sepp [m] father Susi[f
+
+add Sepp father Susi [f]
+add Sepp [] father Susi [f]
+add Sepp [m father Susi [f]
+add Sepp [g] father Susi [f]
+add Sepp m] father Susi [f]
+add Sepp[m] father Susi [f]
+add Sepp [[] father Susi [f]
+
+add Sepp father Susi
+add Sepp [m]father Susi [f]
+add Sepp [m] farther Susi [f]
+
+add Sepp[m] father Susi [f]
+add Sepp [m] father Susi[f]
+
+list
+
+

@@ -1,0 +1,5 @@
+add Susi [f] mother Franziska [f]
+add Serrafine [f] mother Franziska [f]
+
+add Bernd [m] father Franziska [f]
+add Hugo [m] father Franziska [f]

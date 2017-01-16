@@ -1,0 +1,16 @@
+[ERR] Relation not possible.
+[ERR] Relation not possible.
+[ERR] Relation not possible.
+[ERR] Relation not possible.
+?1 [f]
+?2 [m]
+?3 [m]
+?4 [f]
+Bernd [m]
+Berni [m]
+Horst [m]
+Hugo [m]
+Julian [m]
+Lisa [f]
+Sepp [m]
+Susi [f]

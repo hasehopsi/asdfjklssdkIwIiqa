@@ -1,0 +1,26 @@
+Should produce aunt
+add Peter [m] mgf Franz [m]
+add Peter [m] father Susi [f]
+relationship Franz [m] Susi [f]
+
+add Francesco [m] fgf Laudon [m]
+add Francesco [m] father Ramona [f]
+relationship Laudon [m] Ramona [f]
+
+add Luisa [f] mgm Laudon [m]
+add Luisa [f] mother Salmona [f]
+relationship Laudon [m] Salmona [f]
+
+add Lacroix [f] fgm Laudon [m]
+add Lacroix [f] mother Burriti [f]
+relationship Laudon [m] Burriti [f]
+
+add Humboldt [m] father Lars [m]
+add Susi [f] mother Humboldt [m]
+add Susi [f] mother Maria [f]
+relationship Lars [m] Maria [f]
+
+add Franzi [f] mother Lars [m]
+add Larissa [f] mother Franzi [f]
+add Larissa [f] mother Tania [f]
+relationship Lars [m] Tania [f]
