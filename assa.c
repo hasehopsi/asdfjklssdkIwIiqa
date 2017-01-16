@@ -2376,6 +2376,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
         question_mark_person_counter);
     if(status != NORMAL)
     {
+      freePersonList(&input_persons);
       return FILE_UNREADABLE_EXCEPTION;
     }
    
@@ -2423,6 +2424,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
     {
       if(person1->father_ != NULL)
       {
+        freePersonList(&input_persons);
         return FILE_UNREADABLE_EXCEPTION;
       }
       person1->father_ = person2;
@@ -2431,6 +2433,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
     {
       if(person1->mother_ != NULL)
       {
+        freePersonList(&input_persons);
         return FILE_UNREADABLE_EXCEPTION;
       }
       person1->mother_ = person2;
@@ -2439,6 +2442,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
     //detect if any circles are created by adding them
     if(detectCircles(person1))
     {
+      freePersonList(&input_persons);
       return FILE_UNREADABLE_EXCEPTION;
     }
 
@@ -2460,6 +2464,7 @@ int parseDotFileLine(char* line, struct _PersonList_* all_persons,
         question_mark_person_counter);
     if(status == ERROR)
     {
+      freePersonList(&input_persons);
       return FILE_UNREADABLE_EXCEPTION;
     }
 
