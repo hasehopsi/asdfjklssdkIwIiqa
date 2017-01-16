@@ -2654,6 +2654,7 @@ int main(int argc, char *argv[])
     if(return_status != NORMAL)
     {
       printError(COULD_NOT_READ_FILE);
+      freePersonList(&all_persons);
       return return_status;
     }
   }
