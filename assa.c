@@ -2557,7 +2557,8 @@ int parseDotFile(char* dot_inputfile_name, struct _PersonList_* all_persons,
 //
 //
 
-void commandPrompt(char** command_buffer, char** command, char** arguments)
+void commandPrompt(char** command_buffer, char** command, char** arguments,
+    bool* eof_encountered)
 {
   printf("esp> ");
   char input_character = '\0';
@@ -2579,8 +2580,8 @@ void commandPrompt(char** command_buffer, char** command, char** arguments)
     input_character = getchar();
     if(input_character == EOF)
     {
-      printf("Input character was EOF! quitting...!\n");
-      exit(0);
+      *eof_encountered = true; 
+      return;
     }
   }
   input_buffer[input_buffer_position] = '\0';
@@ -2651,12 +2652,20 @@ int main(int argc, char *argv[])
   char* command_buffer = NULL;
   char* command;
   char* arguments;
+  bool eof_encountered = false;
 
   while(return_status <= 0)
   {
     command = NULL;
     arguments = NULL;
-    commandPrompt(&command_buffer, &command, &arguments);
+    commandPrompt(&command_buffer, &command, &arguments, &eof_encountered);
+
+    if(eof_encountered == true)
+    {
+      free(command_buffer);
+      return_status = NORMAL;
+      break;
+    }
 
     if(command == NULL)
     {
